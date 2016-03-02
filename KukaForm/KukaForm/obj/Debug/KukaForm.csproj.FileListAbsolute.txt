@@ -1,0 +1,32 @@
+K:\Мои Файлы\Универ\МИИ\Саша\KukaForm\KukaForm\bin\Debug\KukaForm.exe.config
+K:\Мои Файлы\Универ\МИИ\Саша\KukaForm\KukaForm\bin\Debug\KukaForm.exe
+K:\Мои Файлы\Универ\МИИ\Саша\KukaForm\KukaForm\bin\Debug\KukaForm.pdb
+K:\Мои Файлы\Универ\МИИ\Саша\KukaForm\KukaForm\obj\Debug\KukaForm.csprojResolveAssemblyReference.cache
+K:\Мои Файлы\Универ\МИИ\Саша\KukaForm\KukaForm\obj\Debug\KukaForm.Form1.resources
+K:\Мои Файлы\Универ\МИИ\Саша\KukaForm\KukaForm\obj\Debug\KukaForm.Properties.Resources.resources
+K:\Мои Файлы\Универ\МИИ\Саша\KukaForm\KukaForm\obj\Debug\KukaForm.csproj.GenerateResource.Cache
+K:\Мои Файлы\Универ\МИИ\Саша\KukaForm\KukaForm\obj\Debug\KukaForm.exe
+K:\Мои Файлы\Универ\МИИ\Саша\KukaForm\KukaForm\obj\Debug\KukaForm.pdb
+K:\Мои Файлы\Универ\МИИ\Саша\KukaForm\KukaForm\bin\Debug\AForge.Fuzzy.dll
+K:\Мои Файлы\Универ\МИИ\Саша\KukaForm\KukaForm\bin\Debug\AForge.dll
+K:\Мои Файлы\Универ\МИИ\Саша\KukaForm\KukaForm\bin\Debug\AForge.Fuzzy.pdb
+K:\Мои Файлы\Универ\МИИ\Саша\KukaForm\KukaForm\bin\Debug\AForge.Fuzzy.xml
+K:\Мои Файлы\Универ\МИИ\Саша\KukaForm\KukaForm\bin\Debug\AForge.pdb
+K:\Мои Файлы\Универ\МИИ\Саша\KukaForm\KukaForm\bin\Debug\AForge.xml
+K:\Мои Файлы\Универ\Диплом\Мой диплом\VrepController\KukaForm\KukaForm\bin\Debug\KukaForm.exe.config
+K:\Мои Файлы\Универ\Диплом\Мой диплом\VrepController\KukaForm\KukaForm\obj\Debug\KukaForm.exe
+K:\Мои Файлы\Универ\Диплом\Мой диплом\VrepController\KukaForm\KukaForm\obj\Debug\KukaForm.pdb
+K:\Мои Файлы\Универ\Диплом\Мой диплом\VrepController\KukaForm\KukaForm\bin\Debug\KukaForm.exe
+K:\Мои Файлы\Универ\Диплом\Мой диплом\VrepController\KukaForm\KukaForm\bin\Debug\KukaForm.pdb
+K:\Мои Файлы\Универ\Диплом\Мой диплом\VrepController\KukaForm\KukaForm\bin\Debug\AForge.Fuzzy.dll
+K:\Мои Файлы\Универ\Диплом\Мой диплом\VrepController\KukaForm\KukaForm\bin\Debug\AForge.dll
+K:\Мои Файлы\Универ\Диплом\Мой диплом\VrepController\KukaForm\KukaForm\bin\Debug\AForge.Fuzzy.xml
+K:\Мои Файлы\Универ\Диплом\Мой диплом\VrepController\KukaForm\KukaForm\bin\Debug\AForge.xml
+K:\Мои Файлы\Универ\Диплом\Мой диплом\VrepController\KukaForm\KukaForm\obj\Debug\KukaForm.csprojResolveAssemblyReference.cache
+K:\Мои Файлы\Универ\Диплом\Мой диплом\VrepController\KukaForm\KukaForm\obj\Debug\KukaForm.Form1.resources
+K:\Мои Файлы\Универ\Диплом\Мой диплом\VrepController\KukaForm\KukaForm\obj\Debug\KukaForm.Properties.Resources.resources
+K:\Мои Файлы\Универ\Диплом\Мой диплом\VrepController\KukaForm\KukaForm\obj\Debug\KukaForm.csproj.GenerateResource.Cache
+K:\Мои Файлы\Универ\Диплом\Мой диплом\VrepController\KukaForm\KukaForm\obj\Debug\KukaForm.Form2.resources
+K:\Мои Файлы\Универ\Диплом\Мой диплом\VrepController\QuadrocopterARDrone\KukaForm\KukaForm\bin\Debug\KukaForm.exe.config
+K:\Мои Файлы\Универ\Диплом\Мой диплом\VrepController\QuadrocopterARDrone\KukaForm\KukaForm\obj\Debug\KukaForm.exe
+K:\Мои Файлы\Универ\Диплом\Мой диплом\VrepController\QuadrocopterARDrone\KukaForm\KukaForm\obj\Debug\KukaForm.pdb
