@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Controller
 {
-    class QuadrocopterController
+    public class QuadrocopterController
     {
         VRepController vrep;
         List<Drive> drivers;
@@ -20,13 +20,14 @@ namespace Controller
             vrep = new VRepController(port);
             drivers = new List<Drive>();
             sensors = new List<VisionSensor>();
+            mySensorData = new SensorData();
             
         }
 
         public void Start()
         {
             vrep.ConnectionStart();
-            CopterDummy = vrep.ObjectHandle("Quadricopter_base");
+            CopterDummy = vrep.ObjectHandle("Quadricopter");// _base");
         }
 
         public void Finish()
@@ -88,8 +89,16 @@ namespace Controller
             var vy = vrep.getFloatSignal("vy");
             var vz = vrep.getFloatSignal("vz");
 
-            
-            Points3 speed = new Points3(vx, vy, vz);
+            var vm = (float)Math.Sqrt(Math.Pow(vx, 2) + Math.Pow(vy,2));
+
+            var alpha = Math.Acos(vx/vm);
+
+            if(vy < 0)
+            {
+                alpha = -alpha;
+            }
+
+            Points3 speed = new Points3(vm*(float)Math.Cos(alpha - orient[2]), vm * (float)Math.Sin(alpha - orient[2]), vz);
 
             var pos = vrep.getObjectPosition(CopterDummy);
             Points3 poss = new Points3(pos[0], pos[1], pos[2]);
@@ -101,15 +110,21 @@ namespace Controller
             sdata.Speed = speed;
             sdata.Coordinates = poss;
 
+            var dt = vrep.GetVelocity(CopterDummy);
+
+            sdata.AngularSpeed = new Points3(dt.angularVelocity[0], dt.angularVelocity[1], dt.angularVelocity[2]);
+
             sdata.Height = pos[2];
 
+            //sdata.Coordinates = new Points3(mySensorData.Coordinates.X  + (mySensorData.Speed.X * 0.01f), mySensorData.Coordinates.Y + (mySensorData.Speed.Y * 0.01f), mySensorData.Coordinates.Z + (mySensorData.Speed.Z * 0.01f));
+            sdata.Coordinates = new Points3(poss.X,poss.Y, poss.Z);
             mySensorData = sdata;
 
             return sdata;
         }
 
     }
-    class SensorData
+    public class SensorData
     {
         float yaw, pitch, roll;
         float height;
@@ -119,6 +134,24 @@ namespace Controller
         Points3 coordinates;
         Points3 speed;
         Points3 acceleration;
+
+
+        public string PrintResult()
+        {
+            string nl = Environment.NewLine;
+            string ypr = "Yaw " + yaw.ToString() + " Pitch " + pitch.ToString() + " Roll "+ roll.ToString();
+            string h = "Height " + height.ToString();
+            string cr = coordinates.PrintResult();
+            string spd = speed.PrintResult();
+            string acc = AngularSpeed.PrintResult();
+
+
+            return ypr +
+                nl + h +
+                nl + "Coordinates " + cr +
+                nl + "Speed " + spd +
+                nl + "Acceleration " + acc;
+        }
 
 
         public SensorData()
@@ -168,7 +201,7 @@ namespace Controller
             get { return speed; }
         }
 
-        public Points3 Acceleration
+        public Points3 AngularSpeed
         {
             set { acceleration = value; }
             get { return acceleration; }
@@ -177,7 +210,7 @@ namespace Controller
 
     }
 
-    class Points3
+    public class Points3
     {
         float x, y, z;
 
@@ -211,18 +244,26 @@ namespace Controller
             set { z = value; }
             get { return z; }
         }
+
+        public string PrintResult()
+        {
+            return "X " + X.ToString() + " Y: " + Y.ToString() + " Z: " + Z.ToString();
+        }
     }
 
-    class RequiredPosition
+    public class RequiredPosition
     {
         float roll, pitch, yaw;
         float height;
         Points3 speed;
+        Points3 position;
+
 
         public RequiredPosition()
         {
             roll = pitch = yaw = height = 0;
             speed = new Points3();
+            position = new Points3();
         }
 
         public float Pitch
@@ -253,6 +294,11 @@ namespace Controller
         {
             set { speed = value; }
             get { return speed; }
+        }
+        public Points3 Position
+        {
+            set { position = value; }
+            get { return position; }
         }
     }
 }

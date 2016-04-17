@@ -15,9 +15,12 @@ namespace KukaForm
 {
     public partial class Form2 : Form
     {
+        #region Используемые глобальные переменные
         QuadrocopterController copter;
+
         Thread workerThread = null;
         Thread workerThread2 = null;
+
         PID pidAltitude;
         PID pidYaw;
         PID pidRoll;
@@ -26,6 +29,9 @@ namespace KukaForm
         PID pidY;
         PID pidVX;
         PID pidVY;
+
+        
+
         CoordinatsOfObject cq;
 
         Bitmap picfromCopter = null;
@@ -35,9 +41,13 @@ namespace KukaForm
         bool isWorking = false;
         RequiredPosition myReqPos;
         SensorData mySensorData;
+        InformationSystem infoSystem;
 
         enum WhichProcess { Nothing, Height, Pitch, Roll, Yaw }
         WhichProcess MyProcess = WhichProcess.Nothing;
+
+
+        #endregion
         public Form2()
         {
             InitializeComponent();
@@ -47,18 +57,19 @@ namespace KukaForm
 
             cq = new CoordinatsOfObject(copter.getVrepController(), copter.getVrepController().ObjectHandle("Quadricopter"));//_base"));
             //PointXYZ point = new PointXYZ();
+            label5.Text = "";
         }
 
         public void initializePID()
         {
-            pidAltitude = new PID(0.08f, 0f, 5f);
-            pidYaw = new PID(0.25f, 0f, 5f);
-            pidRoll = new PID(0.25f, 0f, 5.000f);
-            pidPitch = new PID(0.25f, 0f, 5.000f);
-            pidX = new PID(0.1f, 0.0f, 1f);
-            pidY = new PID(0.1f, 0.0f, 1f);
-            pidVX = new PID(0.0005f, 0.0f, 0.08f);
-            pidVY = new PID(0.0005f, 0.0f, 0.08f);
+            pidAltitude = new PID(0.4f, 0.0f, 12f);
+            pidYaw = new PID(0.2f, 0.00f, 5f);
+            pidRoll = new PID(0.1f, 0f, 10f);
+            pidPitch = new PID(1f, 0f, 16.0f);
+            pidX = new PID(0.0001f, 0.0f, 0.008f);
+            pidY = new PID(0.0001f, 0.0f, 0.08f);
+            pidVX = new PID(0.01f, 0.0000f, 0.1f);//(0.0005f, 0.0f, 0.01f);
+            pidVY = new PID(0.01f, 0.0000f, 0.1f);
 
             workerThread2 = new Thread(flyUp);
             workerThread = new Thread(PidRegulation);
@@ -89,7 +100,16 @@ namespace KukaForm
                 isWorking = true;
                 timer1.Enabled = true;
                 myReqPos = new RequiredPosition();
+                myReqPos.Height = 1f;
                 mySensorData = new SensorData();
+                mySensorData = copter.GetSensorData();
+                myReqPos.Yaw = mySensorData.Yaw;
+
+                infoSystem = new InformationSystem(copter);
+                infoSystem.MyReqPos = myReqPos;
+                infoSystem.MySensorData = mySensorData;
+
+                MyProcess = WhichProcess.Height;
 
                 initializePID();
 
@@ -112,13 +132,63 @@ namespace KukaForm
                 // Bitmap bmp = copter..getImageFromVisionSensor();
                 /*picfromCopter = copter.getDataFromISensor(0);
                 pictureBox1.Image = picfromCopter;*/
-                pictureBox1.Image = copter.getDataFromISensor(0);
+                pictureBox1.Image = infoSystem.GetPictureFromCamera;
+                //pictureBox2.Image = infoSystem.InformationFromCamera.bmp;
                 //Thread.Sleep(25);
                 //Thread.Sleep(10);
                 //pictureBox2.Image = copter.getDataFromISensor(1);
                 //Thread.Sleep(50);
             }
         }
+
+        public void GetPictureToPicBox(Bitmap bmp)
+        {
+            pictureBox2.Image = bmp;
+        }
+
+        public delegate void DelegateForGettingPicture(InformationFromPicture bmp);
+
+        public void GetPictureToPicBox(InformationFromPicture info)
+        {
+            
+            if (label5.InvokeRequired)
+            {
+                DelegateForGettingPicture d = new DelegateForGettingPicture(GetPictureToPicBox);
+                Invoke(d, new object[] { info });
+            }
+            else
+            {
+                label5.Text = info.cCyrclX.ToString() + " | " + info.cCyrclY.ToString();
+            }
+        }
+
+        string GetProcessName()
+        {
+            string st = "";
+
+            switch (MyProcess)
+            {
+                case WhichProcess.Height:
+                    st = "Height";
+                    break;
+                case WhichProcess.Nothing:
+                    st = "Nothing";
+                    break;
+                case WhichProcess.Pitch:
+                    st = "Pitch";
+                    break;
+                case WhichProcess.Roll:
+                    st = "Roll";
+                    break;
+                case WhichProcess.Yaw:
+                    st = "Yaw";
+                    break;
+            }
+
+            return st;
+        }
+
+        #region Непонятно что
 
         private void button2_Click(object sender, EventArgs e)
         {
@@ -164,170 +234,7 @@ namespace KukaForm
         }
 
 
-        void flyUp()
-        {
-            var vrep = copter.getVrepController();
-            float high = 1;
-            var vel = 0f;
-            var yaw = 0f;
-            var pitch = 0f;
-            var roll = 0f;
-            var nline = Environment.NewLine;
-            var vx = 0f;
-            var vy = 0f;
-            var c = vrep.getFloatSignal("z");
-            vx = vrep.getFloatSignal("vx");
-            vy = vrep.getFloatSignal("vy"); ;
-            // c = copter.getVrepController().getFloatSignal("z");
-            var xp = 0.5f;
-            var yp = 0.5f;
-
-            var quadrbase = vrep.ObjectHandle("Quadricopter_base");
-
-            var e = high - c;
-            float[] err = new float[3];
-            for(int i = 0; i<3; i++)
-            {
-                err[i] = e;
-            }
-
-            //Stopwatch sWatch = new Stopwatch();
-            float xxx = 0f, yyy = 0f;
-            int j = 0;
-            float sum = e;
-            //float f = 0;
-            while (vrep.isClientConnected() && (sum > 0.1f))
-            {
-                // 
-                c = vrep.getFloatSignal("z");
-                var v = vrep.getObjectOrientation(quadrbase, -1);
-                vx = vrep.getFloatSignal("vx");
-                vy = vrep.getFloatSignal("vy");
-
-                xxx += vx;
-                yyy += vy;
-
-                var xx = pidVX.getEffect( 0-xxx);
-                if (xx > 0.5236f)
-                    xx = 0.5236f;
-
-                var yy = pidVY.getEffect(yyy -0);
-                if (yy > 0.5236f)
-                    yy = 0.5236f;
-
-
-                yaw = pidYaw.getEffect(0 - v[2]);
-                vel = pidAltitude.getEffect(high - c);
-                roll = pidRoll.getEffect((yy - v[0]));
-                pitch = pidPitch.getEffect(xx - v[1]);
-                moveDriver(commonVelocity + vel, yaw, pitch, roll);
-                var st = "Velx: "+ xxx.ToString() + nline + "Vely: " + yyy.ToString() + nline + nline;//"Xtarg : " + xp.ToString() + nline + "Ytarg: " + yp.ToString() + nline + "Xc:" + x.ToString() + nline + "Yc:" + y.ToString() + nline;
-                var str = st + "XX vel:" + xx.ToString() + nline + "YY vel:" + yy.ToString() + nline + "Yaw:" + yaw.ToString() + nline + "Roll: " + roll + nline + "Pitch" + pitch;//c.ToString() + Environment.NewLine + (vel + 5.35f).ToString() + Environment.NewLine + (high - c).ToString();
-                var str2 = nline + nline + "Atitude:" + c.ToString() + nline + "Velocity: " + vel.ToString() + nline + "Real yaw :" + v[2].ToString() + nline + "Real pitch:" + v[1].ToString() + nline + "Real roll: " + v[0].ToString();
-                SetDistanceToLable(textBox1, str + str2);
-
-
-                err[j] += high - c;
-                j++;
-                if (j > 2)
-                    j = 0;
-
-
-                for (int i = 0; i < err.Length; i++)
-                    sum += err[i];
-                sum = sum / err.Length;
-                //setPicture();
-            }
-            SetDistanceToLable(textBox1, "Взлет закончен...");
-        }
-
-
-        void PidRegulation()
-        {
-            float high = 1;
-            var vel = 0f;
-            var yaw = 0f;
-            var pitch = 0f;
-            var roll = 0f;
-            var nline = Environment.NewLine;
-            var x = 0f;
-            var y = 0f;
-            var c = copter.getVrepController().getFloatSignal("z");
-            x = copter.getVrepController().getFloatSignal("x");
-             y = copter.getVrepController().getFloatSignal("y"); ;
-            // c = copter.getVrepController().getFloatSignal("z");
-            var xp = 0.5f;
-            var yp = 0.5f;
-
-
-
-            //float f = 0;
-            while (copter.getVrepController().isClientConnected())
-            {
-                /*PointXYZ p = cq.getCoordinatOfObj();
-                f = p[2];
-                var ff = p[1];
-                //vel = pid.getEffect(high - f);
-                //moveDriver(vel);*/
-                var v = copter.getVrepController().getObjectOrientation(copter.getVrepController().ObjectHandle("Quadricopter_base"), -1);
-
-                x = copter.getVrepController().getFloatSignal("x");
-                 y = copter.getVrepController().getFloatSignal("y"); ;
-                 c = copter.getVrepController().getFloatSignal("z");
-                //vel = pid.getEffect(high - v[2]);
-                //pid.getEffect(c);
-
-                var xx = pidX.getEffect(xp - x);
-                if (xx > 0.5236f)
-                    xx = 0.5236f;
-
-                var yy = pidY.getEffect(y - yp);
-                if (yy > 0.5236f)
-                    yy = 0.5236f;
-
-
-                yaw =  pidYaw.getEffect(0 - v[2]);
-                vel = pidAltitude.getEffect(high - c);
-                roll =  pidRoll.getEffect((yy - v[0]));
-                pitch =  pidPitch.getEffect(xx - v[1]);
-                moveDriver(commonVelocity + vel, yaw, pitch, roll);
-                var st = "Xtarg : " + xp.ToString() + nline + "Ytarg: " + yp.ToString()+nline + "Xc:" + x.ToString() + nline + "Yc:" + y.ToString() + nline;
-                var str =  st + "XX vel:" + xx.ToString() + nline + "YY vel:" +yy.ToString() +nline+"Yaw:" + yaw.ToString() + nline + "Roll: " + roll + nline + "Pitch" + pitch;//c.ToString() + Environment.NewLine + (vel + 5.35f).ToString() + Environment.NewLine + (high - c).ToString();
-                var str2 = nline + nline + "Atitude:" + c.ToString() + nline + "Velocity: " + vel.ToString() + nline + "Real yaw :"+ v[2].ToString() + nline + "Real pitch:" + v[1].ToString() + nline + "Real roll: " + v[0].ToString();
-                SetDistanceToLable(textBox1, str+str2);
-
-            }
-        }
-
-        delegate void SetTellCallBack(System.Windows.Forms.Control control, string lab);
-
-        void SetDistanceToLable(System.Windows.Forms.Control control, string lab)
-        {
-            if (control.InvokeRequired)
-            {
-                SetTellCallBack d = new SetTellCallBack(SetDistanceToLable);
-                Invoke(d, new object[] { control, lab });
-            }
-            else
-            {
-                control.Text = lab;
-            }
-        }
-
-        void moveDriver(float vel)
-        {
-            copter.setVelocityToForceDriver(0, vel);
-            copter.setVelocityToForceDriver(1, vel);
-            copter.setVelocityToForceDriver(2, vel);
-            copter.setVelocityToForceDriver(3, vel);
-        }
-        void moveDriver(float vel, float yaw, float pitch, float roll)
-        {
-            copter.setVelocityToForceDriver(0, vel - yaw - pitch + roll);
-            copter.setVelocityToForceDriver(1, vel  + yaw + pitch +  roll);
-            copter.setVelocityToForceDriver(2, vel - yaw + pitch - roll);
-            copter.setVelocityToForceDriver(3, vel + yaw - pitch -  roll);
-        }
+        
 
         private void button5_Click(object sender, EventArgs e)
         {
@@ -533,41 +440,62 @@ namespace KukaForm
             }
         }
 
+#endregion
+
         private void Form2_FormClosing(object sender, FormClosingEventArgs e)
         {
             if (workerThread.IsAlive)
                 workerThread.Abort();
         }
 
+        #region Основные алгоритмы
+
         private void timer1_Tick(object sender, EventArgs e)
         {
             if(isWorking)
             {
-                mySensorData = copter.GetSensorData();
-                switch(MyProcess)
-                {
-                    case WhichProcess.Nothing:
-                        APReachHeight();
-                        break;
-                    case WhichProcess.Height:
-                        APReachHeight();
-                        break;
-                    case WhichProcess.Pitch:
-                        break;
-                    case WhichProcess.Roll:
-                        break;
-                    case WhichProcess.Yaw:
-                        break;
-                }
+                infoSystem.UpdateSensorDara();
+                //mySensorData = copter.GetSensorData();
+                textBox1.Text = infoSystem.MySensorData.Speed.X.ToString() + "    " + infoSystem.MySensorData.Speed.Y.ToString() + Environment.NewLine
+                    + "X: " + infoSystem.MySensorData.Coordinates.X.ToString()
+                    + "Y: " + infoSystem.MySensorData.Coordinates.Y.ToString()
+                    + "Z: " + infoSystem.MySensorData.Coordinates.Z.ToString()
+                    + Environment.NewLine + infoSystem.MySensorData.PrintResult()
+                    + Environment.NewLine + GetProcessName();
+                if(MyProcess == WhichProcess.Pitch)
+                    textBox1.Text += Environment.NewLine + myC.dx.ToString();
+                /* switch (MyProcess)
+                 {
+                     case WhichProcess.Nothing:
+                         APNothingToDo();
+                         break;
+                     case WhichProcess.Height:
+                         APReachHeight();
+                         break;
+                     case WhichProcess.Pitch:
+                         APFlyStraight();
+                         break;
+                     case WhichProcess.Roll:
+                         APFlySide();
+                         break;
+                     case WhichProcess.Yaw:
+                         break;
+                 }*/
+                setPicture();
+                GetPictureToPicBox(infoSystem.InformationFromCamera.bmp);
             }
+
+           
+            //infoSystem.DetectObjectFromData(GetPictureToPicBox);
             
+
         }
 
         void APNothingToDo()
         {
             //ЛА должен сохранять принятое положение в воздухе
-            dvx += mySensorData.Speed.X;
-            dvy += mySensorData.Speed.Y;
+            dvx = infoSystem.MySensorData.Speed.X;
+            dvy = infoSystem.MySensorData.Speed.Y;
 
             //Превращение скоростей в требуемые углы поворота ЛА
             var dvelx = pidVX.getEffect(0 - dvx);
@@ -579,12 +507,12 @@ namespace KukaForm
                 dvely = 0.5236f;
 
             // При нажатии на кнопку надо обнулять dvх и dvy
-            var yaw = pidYaw.getEffect(myReqPos.Yaw - mySensorData.Yaw);
-            var vel = pidAltitude.getEffect(myReqPos.Height - mySensorData.Height);
-            var roll = pidRoll.getEffect(dvely - 0 - mySensorData.Roll);
-            var pitch = pidPitch.getEffect(dvelx - 0 - mySensorData.Pitch);
+            var yaw = pidYaw.getEffect(infoSystem.MyReqPos.Yaw - infoSystem.MySensorData.Yaw);
+            var vel = pidAltitude.getEffect(infoSystem.MyReqPos.Height - infoSystem.MySensorData.Height);
+            var roll = pidRoll.getEffect(dvely + infoSystem.MyReqPos.Roll - infoSystem.MySensorData.Roll);
+            var pitch = pidPitch.getEffect(dvelx + infoSystem.MyReqPos.Pitch - infoSystem.MySensorData.Pitch);
             moveDriver(commonVelocity + vel, yaw, pitch, roll);
-            MyProcess = WhichProcess.Nothing;
+            //MyProcess = WhichProcess.Nothing;
         }
 
         float dvx = 0;
@@ -593,64 +521,338 @@ namespace KukaForm
         void APReachHeight()
         {
             //ЛА изменять высоту
-            //var vrep = copter.getVrepController();
-            //float high = 1;
-            //var vel = 0f;
-            //var yaw = 0f;
-            //var pitch = 0f;
-            //var roll = 0f;
-            //var nline = Environment.NewLine;
-            //var vx = 0f;
-            //var vy = 0f;
-            //var c = vrep.getFloatSignal("z");
-            //vx = vrep.getFloatSignal("vx");
-            //vy = vrep.getFloatSignal("vy"); ;
-            //// c = copter.getVrepController().getFloatSignal("z");
-            //var xp = 0.5f;
-            //var yp = 0.5f;
-
-            //var quadrbase = vrep.ObjectHandle("Quadricopter_base");
-
-            //var e = high - c;
-            //float[] err = new float[3];
-            //for (int i = 0; i < 3; i++)
-            //{
-            //    err[i] = e;
-            //}
-
-            ////Stopwatch sWatch = new Stopwatch();
-            //float xxx = 0f, yyy = 0f;
-            //int j = 0;
-            //float sum = e;
-            ////float f = 0;
             
-            //// 
-            //c = vrep.getFloatSignal("z");
-            //var v = vrep.getObjectOrientation(quadrbase, -1);
-            //vx = vrep.getFloatSignal("vx");
-            //vy = vrep.getFloatSignal("vy");
 
-            dvx += mySensorData.Speed.X;
-            dvy += mySensorData.Speed.Y;
+            dvx += infoSystem.MySensorData.Speed.X;
+            dvy += infoSystem.MySensorData.Speed.Y;
             
             //Превращение скоростей в требуемые углы поворота ЛА
-            var dvelx = pidVX.getEffect(0 - dvx);
+            var dvelx = pidX.getEffect(0 - dvx);
+            if (dvelx > 0.5236f)
+                dvelx = 0.5236f;
+
+            var dvely = pidY.getEffect(dvy - 0);// infoSystem.MyReqPos.Speed.Y);
+            if (dvely > 0.5236f)
+                dvely = 0.5236f;
+            //dvelx = 0f;
+            //dvely = 0f;
+            // При нажатии на кнопку надо обнулять dvх и dvy
+            var yaw = pidYaw.getEffect(infoSystem.MyReqPos.Yaw - infoSystem.MySensorData.Yaw);
+            var vel = pidAltitude.getEffect(infoSystem.MyReqPos.Height - infoSystem.MySensorData.Height);
+            var roll = pidRoll.getEffect(dvely + infoSystem.MyReqPos.Roll - infoSystem.MySensorData.Roll);
+            var pitch = pidPitch.getEffect(dvelx + infoSystem.MyReqPos.Pitch - infoSystem.MySensorData.Pitch);
+            moveDriver(commonVelocity + vel, yaw, pitch, roll);
+            //MyProcess = WhichProcess.Nothing;
+            if((Math.Abs((infoSystem.MySensorData.Height - infoSystem.MyReqPos.Height)) < 0.1f)&&(infoSystem.MySensorData.Speed.Z < 0.05f))
+            {
+                MyProcess = WhichProcess.Pitch;
+                infoSystem.MyReqPos.Roll = 0;
+                infoSystem.MyReqPos.Pitch = 0;
+                infoSystem.MyReqPos.Yaw = 0;
+                infoSystem.MyReqPos.Speed.X = 0;
+                infoSystem.MyReqPos.Speed.Y = 0;
+                infoSystem.MyReqPos.Speed.Z = 0;
+
+                dvx = 0;
+                dvy = 0;
+
+                myC.dx = 0;
+
+                infoSystem.MyReqPos.Speed.X = 0.5f;
+            }
+         
+        }
+
+        CoordinatesForFlyingStraight myC = new CoordinatesForFlyingStraight();
+
+        void APFlyStraight()
+        {
+            //ЛА изменять высоту
+
+
+            dvx = infoSystem.MySensorData.Speed.X;
+            dvy = infoSystem.MySensorData.Speed.Y;
+
+            myC.dx += dvx * 0.01f;
+
+            //Превращение скоростей в требуемые углы поворота ЛА
+            var dvelx = pidVX.getEffect(infoSystem.MyReqPos.Speed.X - dvx);
             if (dvelx > 0.5236f)
                 dvelx = 0.5236f;
 
             var dvely = pidVY.getEffect(dvy - 0);
             if (dvely > 0.5236f)
                 dvely = 0.5236f;
-
+            //dvelx = 0f;
+            //dvely = 0f;
             // При нажатии на кнопку надо обнулять dvх и dvy
-            var yaw = pidYaw.getEffect(myReqPos.Yaw - mySensorData.Yaw);
-            var vel = pidAltitude.getEffect(myReqPos.Height - mySensorData.Height);
-            var roll = pidRoll.getEffect(dvely - myReqPos.Roll - mySensorData.Roll);
-            var pitch = pidPitch.getEffect(dvelx - myReqPos.Pitch - mySensorData.Pitch);
-            moveDriver(commonVelocity + vel, yaw, pitch, roll);
-            MyProcess = WhichProcess.Nothing;
-         
+            var yaw = pidYaw.getEffect(infoSystem.MyReqPos.Yaw - infoSystem.MySensorData.Yaw);
+            var vel = pidAltitude.getEffect(infoSystem.MyReqPos.Height - infoSystem.MySensorData.Height);
+            var roll = pidRoll.getEffect(dvely + infoSystem.MyReqPos.Roll - infoSystem.MySensorData.Roll);
+            var pitch = pidPitch.getEffect(dvelx + infoSystem.MyReqPos.Pitch - infoSystem.MySensorData.Pitch);
+            moveDriver(commonVelocity + vel + dvelx, yaw, pitch, roll);
+            //MyProcess = WhichProcess.Nothing;
+
+            if (myC.dx > 1f)
+            {
+                MyProcess = WhichProcess.Nothing;
+            }
+
         }
+
+        void APFlySide()
+        {
+            //ЛА изменять высоту
+
+
+            dvx = infoSystem.MySensorData.Speed.X;
+            dvy = infoSystem.MySensorData.Speed.Y;
+
+            //Превращение скоростей в требуемые углы поворота ЛА
+            var dvelx = pidVX.getEffect(0 - dvx);
+            if (dvelx > 0.5236f)
+                dvelx = 0.5236f;
+
+            var dvely = pidVY.getEffect(dvy - infoSystem.MyReqPos.Speed.Y);
+            if (dvely > 0.5236f)
+                dvely = 0.5236f;
+            //dvelx = 0f;
+            //dvely = 0f;
+            // При нажатии на кнопку надо обнулять dvх и dvy
+            var yaw = pidYaw.getEffect(infoSystem.MyReqPos.Yaw - infoSystem.MySensorData.Yaw);
+            var vel = pidAltitude.getEffect(infoSystem.MyReqPos.Height - infoSystem.MySensorData.Height);
+            var roll = pidRoll.getEffect(infoSystem.MyReqPos.Roll - infoSystem.MySensorData.Roll);
+            var pitch = pidPitch.getEffect(dvelx + infoSystem.MyReqPos.Pitch - infoSystem.MySensorData.Pitch);
+            moveDriver(commonVelocity + vel + dvely, yaw, pitch, roll);
+            //MyProcess = WhichProcess.Nothing;
+
+        }
+
+        #endregion
+
+       
+
+
+        #region Управление кнопками(События)
+        private void button7_Click(object sender, EventArgs e)
+        {
+            MyProcess = WhichProcess.Height;
+            infoSystem.MyReqPos.Roll = 0;
+            infoSystem.MyReqPos.Pitch = 0;
+            infoSystem.MyReqPos.Speed.X = 0;
+            infoSystem.MyReqPos.Speed.Y = 0;
+            infoSystem.MyReqPos.Speed.Z = 0;
+            infoSystem.MyReqPos.Height += 0.5f;
+        }
+
+        private void button8_Click(object sender, EventArgs e)
+        {
+            MyProcess = WhichProcess.Height;
+            infoSystem.MyReqPos.Roll = 0;
+            infoSystem.MyReqPos.Pitch = 0;
+            infoSystem.MyReqPos.Speed.X = 0;
+            infoSystem.MyReqPos.Speed.Y = 0;
+            infoSystem.MyReqPos.Speed.Z = 0;
+            infoSystem.MyReqPos.Height -= 0.5f;
+        }
+
+        private void button7_MouseUp(object sender, MouseEventArgs e)
+        {
+            MyProcess = WhichProcess.Nothing;
+            dvx = dvy = 0;
+        }
+
+        private void button8_MouseUp(object sender, MouseEventArgs e)
+        {
+            MyProcess = WhichProcess.Nothing;
+            dvx = dvy = 0;
+        }
+
+        private void button9_MouseDown(object sender, MouseEventArgs e)
+        {
+            infoSystem.MyReqPos.Roll = 0;
+            infoSystem.MyReqPos.Pitch = -0.05f;
+            infoSystem.MyReqPos.Speed.X = 0.10f;//-0.05f;
+            infoSystem.MyReqPos.Speed.Y = 0;
+            infoSystem.MyReqPos.Speed.Z = 0;
+            MyProcess = WhichProcess.Pitch;
+            //myReqPos.Height -= 0.5f;
+        }
+
+        private void button9_MouseUp(object sender, MouseEventArgs e)
+        {
+            infoSystem.MyReqPos.Roll = 0;
+            infoSystem.MyReqPos.Pitch = 0f;
+            infoSystem.MyReqPos.Speed.X = 0f;
+            infoSystem.MyReqPos.Speed.Y = 0;
+            infoSystem.MyReqPos.Speed.Z = 0;
+            dvx = 0;
+            dvy = 0;
+            MyProcess = WhichProcess.Nothing;
+        }
+
+        private void button13_MouseDown(object sender, MouseEventArgs e)
+        {
+            
+        }
+
+        private void button13_Click(object sender, EventArgs e)
+        {
+            infoSystem.MyReqPos.Roll = 0;
+            infoSystem.MyReqPos.Pitch = 0f;
+            infoSystem.MyReqPos.Yaw += 0.05f;
+            infoSystem.MyReqPos.Speed.X = 0f;
+            infoSystem.MyReqPos.Speed.Y = 0;
+            infoSystem.MyReqPos.Speed.Z = 0;
+        }
+
+        private void button14_Click(object sender, EventArgs e)
+        {
+            infoSystem.MyReqPos.Roll = 0;
+            infoSystem.MyReqPos.Pitch = 0f;
+            infoSystem.MyReqPos.Yaw -= 0.05f;
+            infoSystem.MyReqPos.Speed.X = 0f;
+            infoSystem.MyReqPos.Speed.Y = 0;
+            infoSystem.MyReqPos.Speed.Z = 0;
+        }
+
+        private void button10_MouseDown(object sender, MouseEventArgs e)
+        {
+            infoSystem.MyReqPos.Roll = 0;
+            infoSystem.MyReqPos.Pitch = 0.05f;
+            infoSystem.MyReqPos.Speed.X = -0.10f;//-0.05f;
+            infoSystem.MyReqPos.Speed.Y = 0;
+            infoSystem.MyReqPos.Speed.Z = 0;
+            MyProcess = WhichProcess.Pitch;
+
+        }
+
+        private void button10_MouseUp(object sender, MouseEventArgs e)
+        {
+            infoSystem.MyReqPos.Roll = 0;
+            infoSystem.MyReqPos.Pitch = 0f;
+            infoSystem.MyReqPos.Speed.X = 0f;
+            infoSystem.MyReqPos.Speed.Y = 0;
+            infoSystem.MyReqPos.Speed.Z = 0;
+            dvx = 0;
+            dvy = 0;
+            MyProcess = WhichProcess.Nothing;
+        }
+
+        private void button11_MouseDown(object sender, MouseEventArgs e)
+        {
+
+            infoSystem.MyReqPos.Roll = -0.1f;
+            infoSystem.MyReqPos.Pitch = 0;
+            infoSystem.MyReqPos.Speed.X = 0;
+            infoSystem.MyReqPos.Speed.Y = 0.05f;
+            infoSystem.MyReqPos.Speed.Z = 0;
+            MyProcess = WhichProcess.Roll;
+            label5.Text = "Нажата кнопка";
+        }
+
+        private void button11_MouseUp(object sender, MouseEventArgs e)
+        {
+            infoSystem.MyReqPos.Roll = 0;
+            infoSystem.MyReqPos.Pitch = 0;
+            infoSystem.MyReqPos.Speed.X = 0;
+            infoSystem.MyReqPos.Speed.Y = 0;
+            infoSystem.MyReqPos.Speed.Z = 0;
+            dvx = 0;
+            dvy = 0;
+            MyProcess = WhichProcess.Nothing;
+            label5.Text = "Отжата кнопка";
+        }
+
+        private void button12_MouseDown(object sender, MouseEventArgs e)
+        {
+            infoSystem.MyReqPos.Roll = 0.1f;
+            infoSystem.MyReqPos.Pitch = 0;
+            infoSystem.MyReqPos.Speed.X = 0;
+            infoSystem.MyReqPos.Speed.Y = -0.05f;
+            infoSystem.MyReqPos.Speed.Z = 0;
+            MyProcess = WhichProcess.Roll;
+            label5.Text = "Нажата кнопка";
+        }
+
+        private void button12_MouseUp(object sender, MouseEventArgs e)
+        {
+            infoSystem.MyReqPos.Roll = 0;
+            infoSystem.MyReqPos.Pitch = 0;
+            infoSystem.MyReqPos.Speed.X = 0;
+            infoSystem.MyReqPos.Speed.Y = 0;
+            infoSystem.MyReqPos.Speed.Z = 0;
+            dvx = 0;
+            dvy = 0;
+            MyProcess = WhichProcess.Nothing;
+            label5.Text = "Отжата кнопка";
+        }
+
+        private void button10_Click(object sender, EventArgs e)
+        {
+            /*if (MyProcess == WhichProcess.Pitch)
+            {
+                MyProcess = WhichProcess.Nothing;
+                myReqPos.Roll = 0;
+                myReqPos.Pitch = 0f;
+                myReqPos.Speed.X = 0f;//-0.05f;
+                myReqPos.Speed.Y = 0;
+                myReqPos.Speed.Z = 0;
+                dvx =  0;
+                dvy = 0;
+            }
+            else
+            {
+                MyProcess = WhichProcess.Pitch;
+                myReqPos.Roll = 0;
+                myReqPos.Pitch = 0f;
+                myReqPos.Speed.X = -0.05f;//-0.05f;
+                myReqPos.Speed.Y = 0;
+                myReqPos.Speed.Z = 0;
+
+            }*/
+        }
+
+        private void button9_Click(object sender, EventArgs e)
+        {
+            if(MyProcess == WhichProcess.Pitch)
+            {
+                MyProcess = WhichProcess.Nothing;
+                infoSystem.MyReqPos.Roll = 0;
+                infoSystem.MyReqPos.Pitch = 0f;
+                infoSystem.MyReqPos.Speed.X = 0f;//-0.05f;
+                infoSystem.MyReqPos.Speed.Y = 0;
+                infoSystem.MyReqPos.Speed.Z = 0;
+                dvx = 0;
+                dvy = 0;
+            }
+            else
+            {
+                MyProcess = WhichProcess.Pitch;
+                infoSystem.MyReqPos.Roll = 0;
+                infoSystem.MyReqPos.Pitch = 0f;
+                infoSystem.MyReqPos.Speed.X = 0.05f;//-0.05f;
+                infoSystem.MyReqPos.Speed.Y = 0;
+                infoSystem.MyReqPos.Speed.Z = 0;
+
+            }
+            
+        }
+
+        private void Form2_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Down)
+                label5.Text = "Нажата W";
+        }
+
+        private void Form2_KeyUp(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Down)
+                label5.Text = "Отжата W";
+
+        }
+        #endregion
+        #region Неиспользуемые функции
 
         void flyUpNewVersion()
         {
@@ -729,136 +931,177 @@ namespace KukaForm
             SetDistanceToLable(textBox1, "Взлет закончен...");
         }
 
-        private void button7_Click(object sender, EventArgs e)
+        void flyUp()
         {
-            MyProcess = WhichProcess.Height;
-            myReqPos.Roll = 0;
-            myReqPos.Pitch = 0;
-            myReqPos.Speed.X = 0;
-            myReqPos.Speed.Y = 0;
-            myReqPos.Speed.Z = 0;
-            myReqPos.Height += 0.5f;
+            var vrep = copter.getVrepController();
+            float high = 1;
+            var vel = 0f;
+            var yaw = 0f;
+            var pitch = 0f;
+            var roll = 0f;
+            var nline = Environment.NewLine;
+            var vx = 0f;
+            var vy = 0f;
+            var c = vrep.getFloatSignal("z");
+            vx = vrep.getFloatSignal("vx");
+            vy = vrep.getFloatSignal("vy"); ;
+            // c = copter.getVrepController().getFloatSignal("z");
+            var xp = 0.5f;
+            var yp = 0.5f;
+
+            var quadrbase = vrep.ObjectHandle("Quadricopter_base");
+
+            var e = high - c;
+            float[] err = new float[3];
+            for (int i = 0; i < 3; i++)
+            {
+                err[i] = e;
+            }
+
+            //Stopwatch sWatch = new Stopwatch();
+            float xxx = 0f, yyy = 0f;
+            int j = 0;
+            float sum = e;
+            //float f = 0;
+            while (vrep.isClientConnected() && (sum > 0.1f))
+            {
+                // 
+                c = vrep.getFloatSignal("z");
+                var v = vrep.getObjectOrientation(quadrbase, -1);
+                vx = vrep.getFloatSignal("vx");
+                vy = vrep.getFloatSignal("vy");
+
+                xxx += vx;
+                yyy += vy;
+
+                var xx = pidVX.getEffect(0 - xxx);
+                if (xx > 0.5236f)
+                    xx = 0.5236f;
+
+                var yy = pidVY.getEffect(yyy - 0);
+                if (yy > 0.5236f)
+                    yy = 0.5236f;
+
+
+                yaw = pidYaw.getEffect(0 - v[2]);
+                vel = pidAltitude.getEffect(high - c);
+                roll = pidRoll.getEffect((yy - v[0]));
+                pitch = pidPitch.getEffect(xx - v[1]);
+                moveDriver(commonVelocity + vel, yaw, pitch, roll);
+                var st = "Velx: " + xxx.ToString() + nline + "Vely: " + yyy.ToString() + nline + nline;//"Xtarg : " + xp.ToString() + nline + "Ytarg: " + yp.ToString() + nline + "Xc:" + x.ToString() + nline + "Yc:" + y.ToString() + nline;
+                var str = st + "XX vel:" + xx.ToString() + nline + "YY vel:" + yy.ToString() + nline + "Yaw:" + yaw.ToString() + nline + "Roll: " + roll + nline + "Pitch" + pitch;//c.ToString() + Environment.NewLine + (vel + 5.35f).ToString() + Environment.NewLine + (high - c).ToString();
+                var str2 = nline + nline + "Atitude:" + c.ToString() + nline + "Velocity: " + vel.ToString() + nline + "Real yaw :" + v[2].ToString() + nline + "Real pitch:" + v[1].ToString() + nline + "Real roll: " + v[0].ToString();
+                SetDistanceToLable(textBox1, str + str2);
+
+
+                err[j] += high - c;
+                j++;
+                if (j > 2)
+                    j = 0;
+
+
+                for (int i = 0; i < err.Length; i++)
+                    sum += err[i];
+                sum = sum / err.Length;
+                //setPicture();
+            }
+            SetDistanceToLable(textBox1, "Взлет закончен...");
         }
 
-        private void button8_Click(object sender, EventArgs e)
+
+        void PidRegulation()
         {
-            MyProcess = WhichProcess.Height;
-            myReqPos.Roll = 0;
-            myReqPos.Pitch = 0;
-            myReqPos.Speed.X = 0;
-            myReqPos.Speed.Y = 0;
-            myReqPos.Speed.Z = 0;
-            myReqPos.Height -= 0.5f;
+            float high = 1;
+            var vel = 0f;
+            var yaw = 0f;
+            var pitch = 0f;
+            var roll = 0f;
+            var nline = Environment.NewLine;
+            var x = 0f;
+            var y = 0f;
+            var c = copter.getVrepController().getFloatSignal("z");
+            x = copter.getVrepController().getFloatSignal("x");
+            y = copter.getVrepController().getFloatSignal("y"); ;
+            // c = copter.getVrepController().getFloatSignal("z");
+            var xp = 0.5f;
+            var yp = 0.5f;
+
+
+
+            //float f = 0;
+            while (copter.getVrepController().isClientConnected())
+            {
+                /*PointXYZ p = cq.getCoordinatOfObj();
+                f = p[2];
+                var ff = p[1];
+                //vel = pid.getEffect(high - f);
+                //moveDriver(vel);*/
+                var v = copter.getVrepController().getObjectOrientation(copter.getVrepController().ObjectHandle("Quadricopter_base"), -1);
+
+                x = copter.getVrepController().getFloatSignal("x");
+                y = copter.getVrepController().getFloatSignal("y"); ;
+                c = copter.getVrepController().getFloatSignal("z");
+                //vel = pid.getEffect(high - v[2]);
+                //pid.getEffect(c);
+
+                var xx = pidX.getEffect(xp - x);
+                if (xx > 0.5236f)
+                    xx = 0.5236f;
+
+                var yy = pidY.getEffect(y - yp);
+                if (yy > 0.5236f)
+                    yy = 0.5236f;
+
+
+                yaw = pidYaw.getEffect(0 - v[2]);
+                vel = pidAltitude.getEffect(high - c);
+                roll = pidRoll.getEffect((yy - v[0]));
+                pitch = pidPitch.getEffect(xx - v[1]);
+                moveDriver(commonVelocity + vel, yaw, pitch, roll);
+                var st = "Xtarg : " + xp.ToString() + nline + "Ytarg: " + yp.ToString() + nline + "Xc:" + x.ToString() + nline + "Yc:" + y.ToString() + nline;
+                var str = st + "XX vel:" + xx.ToString() + nline + "YY vel:" + yy.ToString() + nline + "Yaw:" + yaw.ToString() + nline + "Roll: " + roll + nline + "Pitch" + pitch;//c.ToString() + Environment.NewLine + (vel + 5.35f).ToString() + Environment.NewLine + (high - c).ToString();
+                var str2 = nline + nline + "Atitude:" + c.ToString() + nline + "Velocity: " + vel.ToString() + nline + "Real yaw :" + v[2].ToString() + nline + "Real pitch:" + v[1].ToString() + nline + "Real roll: " + v[0].ToString();
+                SetDistanceToLable(textBox1, str + str2);
+
+            }
         }
 
-        private void button7_MouseUp(object sender, MouseEventArgs e)
+        delegate void SetTellCallBack(System.Windows.Forms.Control control, string lab);
+
+        void SetDistanceToLable(System.Windows.Forms.Control control, string lab)
         {
-            /*MyProcess = WhichProcess.Nothing;
-            dvx = dvy = 0;*/
+            if (control.InvokeRequired)
+            {
+                SetTellCallBack d = new SetTellCallBack(SetDistanceToLable);
+                Invoke(d, new object[] { control, lab });
+            }
+            else
+            {
+                control.Text = lab;
+            }
         }
 
-        private void button8_MouseUp(object sender, MouseEventArgs e)
+        void moveDriver(float vel)
         {
-            /*MyProcess = WhichProcess.Nothing;
-            dvx = dvy = 0;*/
+            copter.setVelocityToForceDriver(0, vel);
+            copter.setVelocityToForceDriver(1, vel);
+            copter.setVelocityToForceDriver(2, vel);
+            copter.setVelocityToForceDriver(3, vel);
+        }
+        void moveDriver(float vel, float yaw, float pitch, float roll)
+        {
+            copter.setVelocityToForceDriver(0, vel - yaw - pitch + roll);
+            copter.setVelocityToForceDriver(1, vel + yaw + pitch + roll);
+            copter.setVelocityToForceDriver(2, vel - yaw + pitch - roll);
+            copter.setVelocityToForceDriver(3, vel + yaw - pitch - roll);
         }
 
-        private void button9_MouseDown(object sender, MouseEventArgs e)
-        {
-            myReqPos.Roll = 0;
-            myReqPos.Pitch = 0.5f;
-            myReqPos.Speed.X = 0;
-            myReqPos.Speed.Y = 0;
-            myReqPos.Speed.Z = 0;
-            //myReqPos.Height -= 0.5f;
-        }
+        #endregion
+    }
 
-        private void button9_MouseUp(object sender, MouseEventArgs e)
-        {
-            myReqPos.Roll = 0;
-            myReqPos.Pitch = 0f;
-            myReqPos.Speed.X = 0f;
-            myReqPos.Speed.Y = 0;
-            myReqPos.Speed.Z = 0;
-        }
 
-        private void button13_MouseDown(object sender, MouseEventArgs e)
-        {
-            
-        }
-
-        private void button13_Click(object sender, EventArgs e)
-        {
-            myReqPos.Roll = 0;
-            myReqPos.Pitch = 0f;
-            myReqPos.Yaw += 0.05f;
-            myReqPos.Speed.X = 0f;
-            myReqPos.Speed.Y = 0;
-            myReqPos.Speed.Z = 0;
-        }
-
-        private void button14_Click(object sender, EventArgs e)
-        {
-            myReqPos.Roll = 0;
-            myReqPos.Pitch = 0f;
-            myReqPos.Yaw -= 0.05f;
-            myReqPos.Speed.X = -0.50f;
-            myReqPos.Speed.Y = 0;
-            myReqPos.Speed.Z = 0;
-        }
-
-        private void button10_MouseDown(object sender, MouseEventArgs e)
-        {
-            myReqPos.Roll = 0;
-            myReqPos.Pitch = -0.5f;
-            myReqPos.Speed.X = 0.5f;
-            myReqPos.Speed.Y = 0;
-            myReqPos.Speed.Z = 0;
-        }
-
-        private void button10_MouseUp(object sender, MouseEventArgs e)
-        {
-            myReqPos.Roll = 0;
-            myReqPos.Pitch = 0;
-            myReqPos.Speed.X = 0;
-            myReqPos.Speed.Y = 0;
-            myReqPos.Speed.Z = 0;
-        }
-
-        private void button11_MouseDown(object sender, MouseEventArgs e)
-        {
-            myReqPos.Roll = 0.1f;
-            myReqPos.Pitch = 0;
-            myReqPos.Speed.X = 0;
-            myReqPos.Speed.Y = -0.05f;
-            myReqPos.Speed.Z = 0;
-        }
-
-        private void button11_MouseUp(object sender, MouseEventArgs e)
-        {
-            myReqPos.Roll = 0;
-            myReqPos.Pitch = 0;
-            myReqPos.Speed.X = 0;
-            myReqPos.Speed.Y = 0;
-            myReqPos.Speed.Z = 0;
-        }
-
-        private void button12_MouseDown(object sender, MouseEventArgs e)
-        {
-            myReqPos.Roll = -0.1f;
-            myReqPos.Pitch = 0;
-            myReqPos.Speed.X = 0;
-            myReqPos.Speed.Y = 0.05f;
-            myReqPos.Speed.Z = 0;
-        }
-
-        private void button12_MouseUp(object sender, MouseEventArgs e)
-        {
-            myReqPos.Roll = 0;
-            myReqPos.Pitch = 0;
-            myReqPos.Speed.X = 0;
-            myReqPos.Speed.Y = 0;
-            myReqPos.Speed.Z = 0;
-        }
+    public class CoordinatesForFlyingStraight
+    {
+        public float dx = 0;
     }
 }
