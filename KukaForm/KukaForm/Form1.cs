@@ -86,9 +86,9 @@ namespace KukaForm
             //pidVY = new PID(0.01f, 0.0000f, 0.1f);
 
             pidAltitude = new PID(1f, 0.0f, 12f);
-            pidYaw = new PID(0.2f, 0.00f, 10.5f);
-            pidRoll = new PID(2f, 0.005f, 5f);
-            pidPitch = new PID(2f, 0.005f, 5f);
+            pidYaw = new PID(0.2f, 0.00f, 5f);
+            pidRoll = new PID(0.2f, 0.005f, 5f);
+            pidPitch = new PID(0.2f, 0.005f, 5f);
             pidX = new PID(0.0055f, 0.000f, 0.15f);
             pidY = new PID(0.0055f, 0.000f, 0.15f);
             pidZ = new PID(0.05f, 0.000f, 10f);
@@ -301,8 +301,8 @@ namespace KukaForm
 
         void PositionHover()
         {
-            dvx += mySensorData.Speed.X;
-            dvy += mySensorData.Speed.Y;
+            dvx = mySensorData.Speed.X;
+            dvy = mySensorData.Speed.Y;
             dvz += mySensorData.Speed.Z;
 
             var _yaw = mySensorData.Yaw;
@@ -455,7 +455,7 @@ namespace KukaForm
             var vel = pidAltitude.getEffect(rvel - _vel);
             var roll = pidRoll.getEffect(/*dvely*/   - _roll);
             var pitch = pidPitch.getEffect(/*dvelx*/- _pitch);
-            moveDriver(commonVelocity + vel, yaw /*- dyaw*/, pitch+dvelx, roll+dvely);
+            moveDriver(commonVelocity + vel, yaw /*- dyaw*/, pitch/*+dvelx*/, roll/*+dvely*/);
             //MyProcess = WhichProcess.Nothing;
         }
 

@@ -213,13 +213,13 @@ namespace KukaForm
                 if (i == 0)
                 {
                     //setMoveForward();
-                    setYaw(0.1f);
+                    setYaw(0.4f);
                     i++;
                 }
                 else if(i == 1)
                 {
                     //setReqHeight(0.8f);// setMoveForward();
-                    setYaw(0.5f);
+                    setYaw(0.8f);
                     i++;
                 }
                 else if (i == 2)
@@ -334,12 +334,46 @@ namespace KukaForm
             MyProcess = WhichProcess.hover;
         }
 
-        
 
-       
+
+
         #endregion
 
 
+
+        #region база условий смены состояния
+            void ConditionHeight()
+        {
+
+        }
+
+        void ConditionYaw()
+        {
+
+        }
+
+        void ConditionHover()
+        {
+
+        }
+
+        void ConditionStraightFly()
+        {
+
+        }
+        #endregion
+
+
+        #region вспомогательные функции
+        Setpoint GetSetpoint(WhichProcess wp, float h, float y)
+        {
+            Setpoint sp = new Setpoint();
+            /*sp.currentProcces = wp;
+            sp.height = h;
+            sp.yaw = y;*/
+            return sp;
+        }
+        #endregion
         #region
         void GetInformationFromCopter()
         {
@@ -368,5 +402,14 @@ namespace KukaForm
             myReqPos.Yaw = mySensorData.Yaw;
             ControlForm.StartModelToWork(WhichControlToUse.PositionControl, myReqPos);
         }
+    }
+
+
+    class Setpoint
+    {
+        public enum WhichProcess { Nothing, Height, Pitch, Roll, Yaw, hover, FallDown }
+        public WhichProcess currentProcces;
+        public float height;
+        public float yaw;
     }
 }
