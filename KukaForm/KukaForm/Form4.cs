@@ -40,7 +40,7 @@ namespace KukaForm
         private void timer1_Tick(object sender, EventArgs e)
         {
             infSys.UpdateSensorDara();
-            //pictureBox1.Image = infSys.GetPictureFromCamera;
+            pictureBox1.Image = infSys.GetPictureFromCamera;
             textBox1.Text = infSys.MySensorData.PrintResult();
         }
 

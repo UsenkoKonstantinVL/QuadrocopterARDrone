@@ -96,6 +96,7 @@
     <Compile Include="Form4.Designer.cs">
       <DependentUpon>Form4.cs</DependentUpon>
     </Compile>
+    <Compile Include="RobotElement\Condition.cs" />
     <Compile Include="RobotElement\CoordinatsOfObject.cs" />
     <Compile Include="RobotElement\Drive.cs" />
     <Compile Include="API Wrapper\Enums.cs" />

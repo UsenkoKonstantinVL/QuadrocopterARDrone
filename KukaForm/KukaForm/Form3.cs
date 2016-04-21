@@ -18,9 +18,6 @@ namespace KukaForm
         RequiredPosition myReqPos;
         SensorData mySensorData;
 
-
-
-        enum WhichProcess { Nothing, Height, Pitch, Roll, Yaw , hover, FallDown}
         WhichProcess MyProcess = WhichProcess.Nothing;
 
         Form1 ControlForm;
@@ -69,7 +66,7 @@ namespace KukaForm
 
                 timer1.Enabled = true;
 
-                ConditionGetHeight();
+                InitializeSets();
 
                 InformationForm = new Form4(copter);
                 ControlForm = new Form1(InformationForm, copter, myReqPos);
@@ -96,16 +93,57 @@ namespace KukaForm
             ;
         }
 
+        List<Setpoint> mySets = new List<Setpoint>();
+        int CurrentSets = 0;
+
+        void InitializeSets()
+        {
+            Setpoint sp = new Setpoint();
+            sp.currentProcces = WhichProcess.Height;
+            sp.height = 0.5f;
+            mySets.Add(sp);
+
+            sp = new Setpoint();
+            sp.currentProcces = WhichProcess.Yaw;
+            sp.yaw = 0.5f;
+            mySets.Add(sp);
+
+            sp = new Setpoint();
+            sp.currentProcces = WhichProcess.Height;
+            sp.height = 1;
+            mySets.Add(sp);
+
+            sp = new Setpoint();
+            sp.currentProcces = WhichProcess.Yaw;
+            sp.yaw = 0.8f;
+            mySets.Add(sp);
+
+            sp = new Setpoint();
+            sp.currentProcces = WhichProcess.Height;
+            sp.height = 0.5f;
+            mySets.Add(sp);
+
+        }
+
+        void ChangeSets()
+        {
+            if(CurrentSets < (mySets.Count-1))
+            {
+                CurrentSets++;
+            }
+        }
+
         private void timer1_Tick(object sender, EventArgs e)
         {
             GetInformationFromCopter();
-            switch (MyProcess)
+            switch (mySets[CurrentSets].currentProcces)
             {
                 case WhichProcess.Nothing:
                     ConditionHoverPosition();
                     break;
                 case WhichProcess.Height:
                     ConditionGetHeight();
+                    ConditionHeight();
                     break;
                 case WhichProcess.Pitch:
                     APFlyStraight();
@@ -116,10 +154,12 @@ namespace KukaForm
 
                 case WhichProcess.Yaw:
                     ConditionYawMoving();
+                    ConditionYaw();
                     break;
 
                 case WhichProcess.hover:
                     HoverPosition();
+                    ConditionHover();
                     break;
 
                 case WhichProcess.FallDown:
@@ -134,22 +174,12 @@ namespace KukaForm
         #region Обрабатываем данные с коптера и составляем уставки
         void ConditionGetHeight()
         {
-            /* myReqPos.Pitch = 0;
-             myReqPos.Roll = 0;
-             myReqPos.Yaw = mySensorData.Yaw;
-             myReqPos.Position.X = myReqPos.Position.Y = 0;
-             myReqPos.Speed = new Points3(0, 0, 0);
-             myReqPos.Height = 1;*/
+            myReqPos.Height = mySets[CurrentSets].height;
             textBox1.Text = "Getting Height: " + myReqPos.Height.ToString();
-           
-           if ((Math.Abs((mySensorData.Height - myReqPos.Height)) < 0.1f) && (Math.Abs(mySensorData.Speed.Z )< 0.05f))
-            {
 
-                /*setMoveForward();
-                MyProcess = WhichProcess.Pitch;*/
-                HoldPosition();
+            SetRequareMoving(WhichControlToUse.PositionControl);
 
-            }
+
         }
 
        
@@ -245,10 +275,10 @@ namespace KukaForm
         void ConditionYawMoving()
         {
             textBox1.Text = "Getting Yaw: " + myReqPos.Yaw;
-            if((Math.Abs(mySensorData.Yaw - myReqPos.Yaw) < 0.01f))
-            {
-                HoldPosition();
-            }
+            myReqPos.Yaw = mySets[CurrentSets].yaw;
+
+            SetRequareMoving(WhichControlToUse.YawControl);
+
         }
 
         void setReqHeight(float h)
@@ -334,22 +364,27 @@ namespace KukaForm
             MyProcess = WhichProcess.hover;
         }
 
-
-
-
         #endregion
 
 
 
         #region база условий смены состояния
-            void ConditionHeight()
+        void ConditionHeight()
         {
+            if ((Math.Abs((mySensorData.Height - myReqPos.Height)) < 0.1f) && (Math.Abs(mySensorData.Speed.Z) < 0.05f))
+            {
 
+                ChangeSets();
+
+            }
         }
 
         void ConditionYaw()
         {
-
+            if ((Math.Abs(mySensorData.Yaw - myReqPos.Yaw) < 0.01f))
+            {
+                ChangeSets();
+            }
         }
 
         void ConditionHover()
@@ -407,7 +442,6 @@ namespace KukaForm
 
     class Setpoint
     {
-        public enum WhichProcess { Nothing, Height, Pitch, Roll, Yaw, hover, FallDown }
         public WhichProcess currentProcces;
         public float height;
         public float yaw;

@@ -206,9 +206,9 @@ namespace KukaForm
                 dyaw = 2 * (float)Math.PI + dyaw; 
             var yaw = pidYaw.getEffect(dyaw);
             var vel = pidAltitude.getEffect(rvel - _vel);
-            var roll = pidRoll.getEffect(/*_dy*/ /*dvely*/  - _roll);
-            var pitch = pidPitch.getEffect(/*_dx*/ /*dvelx*/ - _pitch);
-            moveDriver(commonVelocity + vel/*-dz*/, 0*yaw, pitch, roll);
+            var roll = pidRoll.getEffect(/*_dy*/ dvely  - _roll);
+            var pitch = pidPitch.getEffect(/*_dx*/ dvelx - _pitch);
+            moveDriver(commonVelocity + vel/*-dz*/, yaw, pitch, roll);
 
             textBox1.Text = _vel.ToString();
         }
@@ -455,7 +455,7 @@ namespace KukaForm
             var vel = pidAltitude.getEffect(rvel - _vel);
             var roll = pidRoll.getEffect(/*dvely*/   - _roll);
             var pitch = pidPitch.getEffect(/*dvelx*/- _pitch);
-            moveDriver(commonVelocity + vel, yaw /*- dyaw*/, pitch/*+dvelx*/, roll/*+dvely*/);
+            moveDriver(commonVelocity + vel, yaw/* - dyaw*/, pitch+dvelx, roll+dvely);
             //MyProcess = WhichProcess.Nothing;
         }
 
@@ -517,6 +517,4 @@ namespace KukaForm
 
     }
 
-    public enum WhichControlToUse
-    { PositionControl, SpeedControl, YawControl, HeightControl, MoveForward, Hover, Fall, Off}
 }
