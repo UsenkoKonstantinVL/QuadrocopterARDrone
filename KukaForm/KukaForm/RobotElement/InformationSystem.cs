@@ -44,9 +44,9 @@ namespace KukaForm
         {
             mySensorData = cptr.GetSensorData();
             bmp = cptr.getDataFromISensor(0);
-            if(bmp != null)
-                infoFromCamera = vs.SearchCycrles(bmp);
-            
+            //if (bmp != null)
+            //    infoFromCamera = vs.SearchCycrles(bmp);
+
         }
 
 
@@ -78,16 +78,16 @@ namespace KukaForm
         //TODO: Написать функцию, выводящую через делегат в другом потоке картинку на PictureBox
 
 
-        void SearchCircles(DelegateForGettingPicture del, Bitmap obj)
-        {
-            var d = (DelegateForGettingPicture)del;
+        //void SearchCircles(DelegateForGettingPicture del, Bitmap obj)
+        //{
+        //    var d = (DelegateForGettingPicture)del;
 
-            if (bmp != null)
-            {
-                Bitmap b = new Bitmap(bmp);
-                d(vs.SearchCycrles(b));
-            }
-        }
+        //    if (bmp != null)
+        //    {
+        //        Bitmap b = new Bitmap(bmp);
+        //        d(vs.SearchCycrles(b));
+        //    }
+        //}
 
         #region Возвращаемые значения и классы
 

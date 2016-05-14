@@ -104,7 +104,7 @@ namespace Controller
             Bitmap bmp = null;
             if (resol != 0)
             {
-                bmp = new Bitmap(resol, resol, 3 * resol, System.Drawing.Imaging.PixelFormat.Format24bppRgb, myinpt);
+                bmp = new Bitmap(resol, resol, 3 * resol, System.Drawing.Imaging.PixelFormat.Format24bppRgb, myinpt);//Format24bppRgb
                 //bmp = getNewBmp(bmp);
             }
             return bmp;

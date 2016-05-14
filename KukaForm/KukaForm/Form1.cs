@@ -50,7 +50,7 @@ namespace KukaForm
         RequiredPosition myReqPos;
         SensorData mySensorData;
         InformationSystem infoSystem;
-        WhichControlToUse wctu = WhichControlToUse.PositionControl;
+        WhichControlToUse wctu = WhichControlToUse.Nothing;
         RequiredPosition mRP;
         SensorData sd;
         Form4 FormDataSens;
@@ -65,7 +65,7 @@ namespace KukaForm
             myReqPos = rp;
             FormDataSens = frm4;
 
-            timer1.Enabled = false;
+            timer1.Enabled = true;
         }
         public Form1()
         {
@@ -89,11 +89,11 @@ namespace KukaForm
             pidYaw = new PID(0.2f, 0.00f, 5f);
             pidRoll = new PID(0.2f, 0.005f, 5f);
             pidPitch = new PID(0.2f, 0.005f, 5f);
-            pidX = new PID(0.0055f, 0.000f, 0.15f);
-            pidY = new PID(0.0055f, 0.000f, 0.15f);
+            pidX = new PID(0.05f, 0.000f, 0.5f);
+            pidY = new PID(0.05f, 0.000f, 0.5f);
             pidZ = new PID(0.05f, 0.000f, 10f);
-            pidVX = new PID(0.008f, 0.00000f, 0.15f);//(0.0005f, 0.0f, 0.01f);
-            pidVY = new PID(0.008f, 0.00000f, 0.15f);
+            pidVX = new PID(0.08f, 0.00000f, 0.5f);//(0.0005f, 0.0f, 0.01f);
+            pidVY = new PID(0.08f, 0.00000f, 0.5f);
             pidVYaw = new PID(0.004f, 0.0f, 0.08f);
         }
 
@@ -184,7 +184,7 @@ namespace KukaForm
             //dvely = 0f;
             // При нажатии на кнопку надо обнулять dvх и dvy
 
-            if((Math.Abs(dz) > 0.01f) && (dz != null))
+            if((Math.Abs(dz) > 0.01f))
             {
                 
                 if (dz > 0)
@@ -301,9 +301,10 @@ namespace KukaForm
 
         void PositionHover()
         {
-            dvx = mySensorData.Speed.X;
-            dvy = mySensorData.Speed.Y;
+            dvx += mySensorData.Speed.X;
+            dvy += mySensorData.Speed.Y;
             dvz += mySensorData.Speed.Z;
+            var dangz = mySensorData.AngularSpeed.Z;
 
             var _yaw = mySensorData.Yaw;
             var _vel = mySensorData.Height;
@@ -318,7 +319,73 @@ namespace KukaForm
             var rx = myReqPos.Position.X;
             var ry = myReqPos.Position.Y;
 
-   
+
+
+            /* var dvelx = pidVX.getEffect(0 - dvx);
+             if (Math.Abs(dvelx) > 1f)
+             {
+                 dvelx = znak(dvelx) * 1f;
+             }
+
+             var dvely = pidVY.getEffect(dvy - 0);
+             if (Math.Abs(dvely) > 1f)
+             {
+                 dvely = znak(dvely) * 1f;
+             }*/
+            var dvelx = pidX.getEffect(-dvx);
+            if (Math.Abs(dvelx) > 0.5236f)
+            {
+                dvelx = znak(dvelx) * 0.5236f;
+            }
+
+            var dvely = pidY.getEffect(dvy - 0);
+            if (Math.Abs(dvely) > 0.5236f)
+            {
+                dvely = znak(dvely) * 0.5236f;
+            }
+
+            var dyaw = ryaw - _yaw;
+            if (dyaw > Math.PI)
+                dyaw = -2 * (float)Math.PI + dyaw;
+            else if (dyaw < -Math.PI)
+                dyaw = 2 * (float)Math.PI + dyaw;
+
+
+            //var yaw = pidYaw.getEffect(dyaw);
+            var yaw = pidYaw.getEffect(-dangz);
+            var vel = pidAltitude.getEffect(rvel - _vel);//pidAltitude.getEffect(rvel - _vel);
+            /*var roll = pidRoll.getEffect(/*dvely*- _roll);
+            var pitch = pidPitch.getEffect(/*dvelx  - _pitch);
+            moveDriver(commonVelocity + vel, yaw, pitch - dvelx, roll - dvely);*/
+            var roll = pidRoll.getEffect(/*_dy*/ dvely - _roll);
+            var pitch = pidPitch.getEffect(/*_dx*/ dvelx - _pitch);
+            moveDriver(commonVelocity + vel/*-dz*/, yaw, pitch, roll);
+
+            textBox1.Text = _vel.ToString();
+        }
+
+
+        void PitchRoll()
+        {
+            dvx = mySensorData.Speed.X;
+            dvy = mySensorData.Speed.Y;
+            dvz += mySensorData.Speed.Z;
+            var dangz = mySensorData.AngularSpeed.Z;
+
+            var _yaw = mySensorData.Yaw;
+            var _vel = mySensorData.Height;
+            var _roll = mySensorData.Roll;
+            var _pitch = mySensorData.Pitch;
+
+            var ryaw = myReqPos.Yaw;
+            var rvel = myReqPos.Height;
+            var rroll = myReqPos.Roll;
+            var rpitch = myReqPos.Pitch;
+
+            var rx = myReqPos.Position.X;
+            var ry = myReqPos.Position.Y;
+
+
 
             var dvelx = pidVX.getEffect(0 - dvx);
             if (Math.Abs(dvelx) > 1f)
@@ -337,12 +404,14 @@ namespace KukaForm
                 dyaw = -2 * (float)Math.PI + dyaw;
             else if (dyaw < -Math.PI)
                 dyaw = 2 * (float)Math.PI + dyaw;
+
+
             var yaw = pidYaw.getEffect(dyaw);
-            //var yaw = pidYaw.getEffect(ryaw - _yaw);
+            //var yaw = pidYaw.getEffect(-dangz);
             var vel = pidAltitude.getEffect(rvel - _vel);//pidAltitude.getEffect(rvel - _vel);
-            var roll = pidRoll.getEffect(/*dvely*/ - _roll);
-            var pitch = pidPitch.getEffect(/*dvelx*/  - _pitch);
-            moveDriver(commonVelocity + vel, yaw, pitch + dvelx, roll + dvely);
+            var roll = pidRoll.getEffect(/*dvely*/ -_roll);
+            var pitch = pidPitch.getEffect(/*dvelx*/  -_pitch);
+            moveDriver(commonVelocity + vel, yaw, pitch /*+ dvelx*/, roll /*+ dvely*/);
 
             textBox1.Text = _vel.ToString();
         }
@@ -473,14 +542,15 @@ namespace KukaForm
             UpdateSensorData();
             switch (wctu)
             {
+                case WhichControlToUse.Nothing: break;
                 case WhichControlToUse.PositionControl: PositionControl();  break;
                 case WhichControlToUse.SpeedControl: break;
                 case WhichControlToUse.YawControl: YawControl(); break;
                 case WhichControlToUse.MoveForward: StraightFlyControl(); break;
-                case WhichControlToUse.Hover:
-                    PositionHover(); break;
+                case WhichControlToUse.Hover: PositionHover(); break;
                 case WhichControlToUse.Off: SetOffCopter(); break;
                 case WhichControlToUse.Fall: fall(); break;
+                case WhichControlToUse.PitchRoll: PitchRoll(); break;
 
             }
            
