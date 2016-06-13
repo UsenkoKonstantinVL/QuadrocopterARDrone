@@ -12,14 +12,15 @@ namespace remoteApiNETWrapper
     public static class VREPWrapper
     {
         static bool fc = false;
-        [DllImport(@"C:\Program Files (x86)\V-REP3\V-REP_PRO_EDU\programming\remoteApiBindings\lib\lib\32Bit\remoteApi.dll", CallingConvention = CallingConvention.Cdecl)]
+        /* @"C:\Program Files (x86)\V-REP3\V-REP_PRO_EDU\programming\remoteApiBindings\lib\lib\32Bit\remoteApi.dll"*/
+        [DllImport("remoteApi.dll", CallingConvention = CallingConvention.Cdecl)]
         public static extern void simxFinish(int clientID);
         public static void simwFinish(int id)
         {
             simxFinish(id);
         }
 
-        [DllImport(@"C:\Program Files (x86)\V-REP3\V-REP_PRO_EDU\programming\remoteApiBindings\lib\lib\32Bit\remoteApi.dll", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("remoteApi.dll", CallingConvention = CallingConvention.Cdecl)]
 
         public static extern int simxGetConnectionId(int clientID);
         public static bool isConnected(int cliId)
@@ -27,7 +28,7 @@ namespace remoteApiNETWrapper
             return simxGetConnectionId(cliId) == -1 ? false : true;
         }
 
-        [DllImport(@"C:\Program Files (x86)\V-REP3\V-REP_PRO_EDU\programming\remoteApiBindings\lib\lib\32Bit\remoteApi.dll", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("remoteApi.dll", CallingConvention = CallingConvention.Cdecl)]
         public static extern simx_error simxGetFloatSignal(int clientID, string signalName, ref float value, simx_opmode opmode);
 
 
@@ -51,7 +52,7 @@ namespace remoteApiNETWrapper
         }
 
         //
-        [DllImport(@"C:\Program Files (x86)\V-REP3\V-REP_PRO_EDU\programming\remoteApiBindings\lib\lib\32Bit\remoteApi.dll", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("remoteApi.dll", CallingConvention = CallingConvention.Cdecl)]
         public static extern simx_error simxGetObjectVelocity(int clientID, int jointHandle, float[] linearVelocity, float[] angularVelocity, simx_opmode operationMode);
 
 
@@ -79,7 +80,7 @@ namespace remoteApiNETWrapper
             return myData;
         }
 
-        /*[DllImport(@"C:\Program Files (x86)\V-REP3\V-REP_PRO_EDU\programming\remoteApiBindings\lib\lib\32Bit\remoteApi.dll", CallingConvention = CallingConvention.Cdecl)]
+        /*[DllImport(remoteApi.dll, CallingConvention = CallingConvention.Cdecl)]
         public static extern simx_error simxGetVelocity(int clientID, int jointHandle, float[] linearVelocity, float[] angularVelocity, simx_opmode operationMode);
 
 
@@ -108,7 +109,7 @@ namespace remoteApiNETWrapper
         }*/
         //
 
-        [DllImport(@"C:\Program Files (x86)\V-REP3\V-REP_PRO_EDU\programming\remoteApiBindings\lib\lib\32Bit\remoteApi.dll")]
+        [DllImport("remoteApi.dll")]
         public static extern simx_error simxGetIntegerSignal(int clientID, string signalName, ref int value, simx_opmode opmode);
 
        
@@ -123,7 +124,7 @@ namespace remoteApiNETWrapper
         }
 
 
-        [DllImport(@"C:\Program Files (x86)\V-REP3\V-REP_PRO_EDU\programming\remoteApiBindings\lib\lib\32Bit\remoteApi.dll", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("remoteApi.dll", CallingConvention = CallingConvention.Cdecl)]
         public static extern simx_error simxSetFloatSignal(int clientID, string signalName, float signalValue, simx_opmode opmode);
         public static void simwSetFloatSignal(int clID, string signN, float signVal)
         {
@@ -131,7 +132,7 @@ namespace remoteApiNETWrapper
         }
 
         
-        [DllImport(@"C:\Program Files (x86)\V-REP3\V-REP_PRO_EDU\programming\remoteApiBindings\lib\lib\32Bit\remoteApi.dll")]
+        [DllImport("remoteApi.dll")]
         public static extern simx_error simxSetStringSignal(int clientID, string signalName, string value, int length, simx_opmode opmode);
         public static void simwSetStringSignal(int clientID, string signalName, string signal)
         {
@@ -139,7 +140,7 @@ namespace remoteApiNETWrapper
         }
 
 
-        [DllImport(@"C:\Program Files (x86)\V-REP3\V-REP_PRO_EDU\programming\remoteApiBindings\lib\lib\32Bit\remoteApi.dll", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("remoteApi.dll", CallingConvention = CallingConvention.Cdecl)]
         public static extern simx_error simxGetStringSignal(int clientID, string signalName, ref IntPtr pointerToValue, ref int signalLength, simx_opmode opmode);
 
         public static string simwGetStringSignal(int clientID, string signalName)
@@ -161,10 +162,10 @@ namespace remoteApiNETWrapper
             return "";
         }
 
-        [DllImport(@"C:\Program Files (x86)\V-REP3\V-REP_PRO_EDU\programming\remoteApiBindings\lib\lib\32Bit\remoteApi.dll")]
+        [DllImport("remoteApi.dll")]
         public static extern simx_error simxGetAndClearStringSignal(int clientID, string signalName, ref IntPtr pointerToValue, ref int signalLength, simx_opmode opmode);
 
-        [DllImport(@"C:\Program Files (x86)\V-REP3\V-REP_PRO_EDU\programming\remoteApiBindings\lib\lib\32Bit\remoteApi.dll", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("remoteApi.dll", CallingConvention = CallingConvention.Cdecl)]
         public static extern simx_error simxGetJointPosition(int clientID, int jointHandle, ref float targetPosition, simx_opmode opmode);
 
         public static float simwGetJointPosition(int clientId, int jObj)
@@ -174,13 +175,13 @@ namespace remoteApiNETWrapper
             simxGetJointPosition(clientId, jObj, ref f, simx_opmode.buffer);
             return f;
         }
-        [DllImport(@"C:\Program Files (x86)\V-REP3\V-REP_PRO_EDU\programming\remoteApiBindings\lib\lib\32Bit\remoteApi.dll")]
+        [DllImport("remoteApi.dll")]
         public static extern simx_error simxGetObjectIntParameter(int clientID, int objectHandle, int parameterID, ref int parameterValue, simx_opmode opmode);
 
-        [DllImport(@"C:\Program Files (x86)\V-REP3\V-REP_PRO_EDU\programming\remoteApiBindings\lib\lib\32Bit\remoteApi.dll")]
+        [DllImport("remoteApi.dll")]
         public static extern simx_error simxGetObjectFloatParameter(int clientID, int objectHandle, int parameterID, ref float parameterValue, simx_opmode opmode);
 
-        [DllImport(@"C:\Program Files (x86)\V-REP3\V-REP_PRO_EDU\programming\remoteApiBindings\lib\lib\32Bit\remoteApi.dll", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("remoteApi.dll", CallingConvention = CallingConvention.Cdecl)]
         public static extern simx_error simxGetObjectOrientation(int clientID, int jointHandle, int relativeToHandle, float[] orientations, simx_opmode opmode);
 
         public static float[] simwGetObjectOrientation(int clientId, int obj, int relativeTo)
@@ -192,7 +193,7 @@ namespace remoteApiNETWrapper
         }
 
         
-        [DllImport(@"C:\Program Files (x86)\V-REP3\V-REP_PRO_EDU\programming\remoteApiBindings\lib\lib\32Bit\remoteApi.dll", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("remoteApi.dll", CallingConvention = CallingConvention.Cdecl)]
         public static extern simx_error simxGetObjectPosition(int clientID, int jointHandle, int relativeToHandle, float[] positions, simx_opmode opmode);
 
         public static float[] simwGetObjectPosition(int clientID, int obj)
@@ -217,17 +218,17 @@ namespace remoteApiNETWrapper
             return pos;
         }
 
-        [DllImport(@"C:\Program Files (x86)\V-REP3\V-REP_PRO_EDU\programming\remoteApiBindings\lib\lib\32Bit\remoteApi.dll")]
+        [DllImport("remoteApi.dll")]
         public static extern simx_error simxPauseCommunication(int cliendID, int pause);
 
-        [DllImport(@"C:\Program Files (x86)\V-REP3\V-REP_PRO_EDU\programming\remoteApiBindings\lib\lib\32Bit\remoteApi.dll")]
+        [DllImport("remoteApi.dll")]
         public extern static simx_error simxReadProximitySensor(int clientID, int sensorHandle,
                                                          ref char detectionState, float[] detectionPoint, ref int objectHandle, float[] normalVector, simx_opmode opmode);
 
-        [DllImport(@"C:\Program Files (x86)\V-REP3\V-REP_PRO_EDU\programming\remoteApiBindings\lib\lib\32Bit\remoteApi.dll")]
+        [DllImport("remoteApi.dll")]
         public static extern simx_error simxSetJointTargetPosition(int clientID, int jointHandle, float targetPosition, simx_opmode opmode);
 
-        [DllImport(@"C:\Program Files (x86)\V-REP3\V-REP_PRO_EDU\programming\remoteApiBindings\lib\lib\32Bit\remoteApi.dll", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("remoteApi.dll", CallingConvention = CallingConvention.Cdecl)]
         public static extern simx_error simxSetJointTargetVelocity(int clientID, int jointHandle, float velocity, simx_opmode opmode);
 
         public static void simwSetJointTargetVelocity(int clientID, int jointHandle, float velocity)
@@ -235,13 +236,13 @@ namespace remoteApiNETWrapper
             simxSetJointTargetVelocity(clientID, jointHandle, velocity, simx_opmode.oneshot);
         }
 
-        [DllImport(@"C:\Program Files (x86)\V-REP3\V-REP_PRO_EDU\programming\remoteApiBindings\lib\lib\32Bit\remoteApi.dll")]
+        [DllImport("remoteApi.dll")]
         public static extern simx_error simxSetObjectFloatParameter(int clientID, int objectHandle, int parameterID, float parameterValue, simx_opmode opmode);
 
-        [DllImport(@"C:\Program Files (x86)\V-REP3\V-REP_PRO_EDU\programming\remoteApiBindings\lib\lib\32Bit\remoteApi.dll")]
+        [DllImport("remoteApi.dll")]
         public static extern simx_error simxSetObjectIntParameter(int clientID, int objectHandle, int parameterID, int parameterValue, simx_opmode opmode);
 
-        [DllImport(@"C:\Program Files (x86)\V-REP3\V-REP_PRO_EDU\programming\remoteApiBindings\lib\lib\32Bit\remoteApi.dll", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("remoteApi.dll", CallingConvention = CallingConvention.Cdecl)]
         public static extern int simxStart(string ip, int port, bool waitForConnection, bool reconnectOnDisconnect, int timeoutMS, int cycleTimeMS);
 
         public static int simwStart(string ip, int port)
@@ -249,14 +250,14 @@ namespace remoteApiNETWrapper
             return simxStart(ip, port, true, true, 2000, 5);
         }
 
-        [DllImport(@"C:\Program Files (x86)\V-REP3\V-REP_PRO_EDU\programming\remoteApiBindings\lib\lib\32Bit\remoteApi.dll")]
+        [DllImport("remoteApi.dll")]
         public static extern simx_error simxGetUIEventButton(int clientID, int uiHandle, ref int uiEventButtonID, IntPtr aux, simx_opmode opmode);
 
-        [DllImport(@"C:\Program Files (x86)\V-REP3\V-REP_PRO_EDU\programming\remoteApiBindings\lib\lib\32Bit\remoteApi.dll")]
+        [DllImport("remoteApi.dll")]
         // public static extern simx_error simxGetUIHandle(int clientID, string uiName, out int handle, simx_opmode opmode);
         public static extern simx_error simxGetUIHandle(int clientID, string uiName, IntPtr p, simx_opmode opmode);
 
-        [DllImport(@"C:\Program Files (x86)\V-REP3\V-REP_PRO_EDU\programming\remoteApiBindings\lib\lib\32Bit\remoteApi.dll", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("remoteApi.dll", CallingConvention = CallingConvention.Cdecl)]
         public static extern simx_error simxGetObjectHandle(int clientID, string objectName, out int handle, simx_opmode opmode);
         public static void simwGetObjectHandle(int clientID, string objectName, out int handle)
         {
@@ -264,7 +265,7 @@ namespace remoteApiNETWrapper
         }
 
 
-        [DllImport(@"C:\Program Files (x86)\V-REP3\V-REP_PRO_EDU\programming\remoteApiBindings\lib\lib\32Bit\remoteApi.dll", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("remoteApi.dll", CallingConvention = CallingConvention.Cdecl)]
         public static extern simx_error simxGetVisionSensorImage(int clientID, int sensorHandle, ref int resolution, ref IntPtr image, char options, int operationMode);
         public static IntPtr simwGetVisionSensorImage(int clientID, int obj, ref int resolution)
         {
@@ -276,7 +277,7 @@ namespace remoteApiNETWrapper
         }
 
 
-        [DllImport(@"C:\Program Files (x86)\V-REP3\V-REP_PRO_EDU\programming\remoteApiBindings\lib\lib\32Bit\remoteApi.dll", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("remoteApi.dll", CallingConvention = CallingConvention.Cdecl)]
         public static extern simx_error simxStartSimulation(int clientID,  int operationMode);
         public static void simwStartSimulation(int clientID)
         {
@@ -285,7 +286,7 @@ namespace remoteApiNETWrapper
          
         }
 
-        [DllImport(@"C:\Program Files (x86)\V-REP3\V-REP_PRO_EDU\programming\remoteApiBindings\lib\lib\32Bit\remoteApi.dll", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("remoteApi.dll", CallingConvention = CallingConvention.Cdecl)]
         public static extern simx_error simxStopSimulation(int clientID, int operationMode);
         public static void simwStopSimulation(int clientID)
         {
