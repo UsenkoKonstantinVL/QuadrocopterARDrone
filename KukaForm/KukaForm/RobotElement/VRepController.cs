@@ -128,5 +128,15 @@ namespace Controller
             return bmp;
         }
 
+        public void StartSimulation()
+        {
+            VREPWrapper.simwStartSimulation(clientID);
+        }
+
+        public void StopSimulation()
+        {
+            VREPWrapper.simwStopSimulation(clientID);
+        }
+
     }
 }

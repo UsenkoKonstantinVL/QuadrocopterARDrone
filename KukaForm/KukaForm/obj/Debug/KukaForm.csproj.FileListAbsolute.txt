@@ -90,3 +90,5 @@ K:\Мои Файлы\Универ\Диплом\Мой диплом\VrepControlle
 K:\Мои Файлы\Универ\Диплом\Мой диплом\VrepController\QuadrocopterARDrone\KukaForm\KukaForm\bin\Debug\zh-CN\ZedGraph.resources.dll
 K:\Мои Файлы\Универ\Диплом\Мой диплом\VrepController\QuadrocopterARDrone\KukaForm\KukaForm\obj\Debug\KukaForm.Form3.resources
 K:\Мои Файлы\Универ\Диплом\Мой диплом\VrepController\QuadrocopterARDrone\KukaForm\KukaForm\obj\Debug\KukaForm.Form4.resources
+K:\Мои Файлы\Универ\Диплом\Мой диплом\VrepController\QuadrocopterARDrone\KukaForm\KukaForm\obj\Debug\KukaForm.StrategLevel.resources
+K:\Мои Файлы\Универ\Диплом\Мой диплом\VrepController\QuadrocopterARDrone\KukaForm\KukaForm\obj\Debug\KukaForm.TacticLevel.resources

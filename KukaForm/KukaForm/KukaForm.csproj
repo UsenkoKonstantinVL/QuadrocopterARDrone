@@ -84,6 +84,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Comand.cs" />
     <Compile Include="Form3.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -126,6 +127,18 @@
     <Compile Include="API Wrapper\VREPHelper.cs" />
     <Compile Include="API Wrapper\VREPSetBlock.cs" />
     <Compile Include="API Wrapper\VREPWrapper.cs" />
+    <Compile Include="StrategLevel.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="StrategLevel.Designer.cs">
+      <DependentUpon>StrategLevel.cs</DependentUpon>
+    </Compile>
+    <Compile Include="TacticLevel.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="TacticLevel.Designer.cs">
+      <DependentUpon>TacticLevel.cs</DependentUpon>
+    </Compile>
     <EmbeddedResource Include="Form1.resx">
       <DependentUpon>Form1.cs</DependentUpon>
     </EmbeddedResource>
@@ -147,6 +160,12 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <EmbeddedResource Include="StrategLevel.resx">
+      <DependentUpon>StrategLevel.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="TacticLevel.resx">
+      <DependentUpon>TacticLevel.cs</DependentUpon>
+    </EmbeddedResource>
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>

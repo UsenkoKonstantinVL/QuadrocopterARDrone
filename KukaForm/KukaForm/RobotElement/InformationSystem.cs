@@ -18,6 +18,7 @@ namespace KukaForm
         InformationFromPicture infoFromCamera;
         VisionControl vs;
         Bitmap bmp;
+        Bitmap FrontCamera;
         Thread myWorkThread;
 
        public  delegate void DelegateForGettingPicture(InformationFromPicture bmp);
@@ -44,50 +45,14 @@ namespace KukaForm
         {
             mySensorData = cptr.GetSensorData();
             bmp = cptr.getDataFromISensor(0);
+            //FrontCamera = cptr.getDataFromISensor(1);
             //if (bmp != null)
             //    infoFromCamera = vs.SearchCycrles(bmp);
 
         }
 
 
-        public void DetectObjectFromData(DelegateForGettingPicture del)
-        {
-           /* if (bmp == null)
-                bmp = null;
-            if (myWorkThread == null)
-            {
-                if (bmp != null)
-                    myWorkThread = new Thread(delegate () { SearchCircles(del, new Bitmap(bmp)); });
-                else
-                    myWorkThread = new Thread(delegate () { SearchCircles(del, null); }); ;
-            }
-            if (myWorkThread.ThreadState == ThreadState.Stopped)
-            {
-                //myWorkThread.Abort();
-                myWorkThread = new Thread(delegate () { SearchCircles(del, new Bitmap(bmp)); });
-                myWorkThread.Start();
-            
-            }
-            else if(myWorkThread.ThreadState == ThreadState.Unstarted)
-            {
-                
-                myWorkThread.Start();
-            }*/
-            
-        }
-        //TODO: Написать функцию, выводящую через делегат в другом потоке картинку на PictureBox
-
-
-        //void SearchCircles(DelegateForGettingPicture del, Bitmap obj)
-        //{
-        //    var d = (DelegateForGettingPicture)del;
-
-        //    if (bmp != null)
-        //    {
-        //        Bitmap b = new Bitmap(bmp);
-        //        d(vs.SearchCycrles(b));
-        //    }
-        //}
+       
 
         #region Возвращаемые значения и классы
 
@@ -113,6 +78,11 @@ namespace KukaForm
         public Bitmap GetPictureFromCamera
         {
             get { return bmp; }
+        }
+
+        public Bitmap GetPictureFromFrontCamera
+        {
+            get { return FrontCamera; }
         }
         #endregion 
     }

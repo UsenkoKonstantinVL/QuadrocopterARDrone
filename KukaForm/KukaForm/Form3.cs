@@ -50,7 +50,7 @@ namespace KukaForm
 
 
                 copter.AddSensor("Vision_sensor1");
-                copter.AddSensor("Visionfloor_sensor");
+                copter.AddSensor("Visionfront_sensor");
                 
 
                 button1.Text = "Стоп";
@@ -105,16 +105,34 @@ namespace KukaForm
         {
             Setpoint sp = new Setpoint();
             sp.currentProcces = WhichProcess.Height;
-            sp.height = 0.35f;
+            sp.height = 0.9f;
             mySets.Add(sp);
 
             sp = new Setpoint();
             sp.currentProcces = WhichProcess.Hover;
             mySets.Add(sp);
 
-            sp = new Setpoint();
-            sp.currentProcces = WhichProcess.PitchRoll;
-            mySets.Add(sp);
+            SetPointCoordinates p = new SetPointCoordinates();
+            p.currentProcces = WhichProcess.Coordinates;
+            Points3 p1, p2;
+            p1 = new Points3();
+            p2 = new Points3();
+
+            p1.X = 1f;
+            p1.Y = 2f;
+
+            p2.X = 2f;
+            p2.Y = 2f;
+
+            p.Coordinates = new List<Points3>();
+
+            p.Coordinates.Add(p1);
+            p.Coordinates.Add(p2);
+            mySets.Add(p);
+
+            //sp = new Setpoint();
+            //sp.currentProcces = WhichProcess.PitchRoll;
+            //mySets.Add(sp);
 
             /*sp = new Setpoint();
             sp.currentProcces = WhichProcess.Yaw;
@@ -145,14 +163,25 @@ namespace KukaForm
             mySets.Add(sp);*/
             CurrentSets = 0;
 
+            CurrentSet = mySets[CurrentSets];
+
         }
+
+        Setpoint CurrentSet;
 
         void ChangeSets()
         {
-            if(CurrentSets < (mySets.Count-1))
+            CurrentSets++;
+            if (CurrentSets < (mySets.Count))
             {
-                CurrentSets++;
+                CurrentSet = mySets[CurrentSets];
                 PrepareToMoving();
+            }
+            else
+            {
+                CurrentSet = new Setpoint();
+                CurrentSet.currentProcces = WhichProcess.Hover;
+                CurrentSets--;
             }
                
         }
@@ -177,7 +206,7 @@ namespace KukaForm
         private void timer1_Tick(object sender, EventArgs e)
         {
             GetInformationFromCopter();
-            switch (mySets[CurrentSets].currentProcces)
+            switch (/*mySets[CurrentSets]*/CurrentSet.currentProcces)
             {
                 case WhichProcess.Nothing:
                     AlgorythmHoverPosition();
@@ -209,6 +238,11 @@ namespace KukaForm
                     AlgorythmGoingDown();
                     break;
 
+                case WhichProcess.Coordinates:
+                    AlgorithmForReachCoordinates();
+                    ConditionCoordinates();
+                    break;
+
             }
             
         }
@@ -223,7 +257,7 @@ namespace KukaForm
 
         void AlgorythmGetHeight()
         {
-            myReqPos.Height = mySets[CurrentSets].height;
+            myReqPos.Height = CurrentSet.height;
             textBox1.Text = "Getting Height: " + myReqPos.Height.ToString();
 
             SetRequareMoving(WhichControlToUse.PositionControl);
@@ -315,6 +349,7 @@ namespace KukaForm
 
             double zone1 = 0, zone2 = 0, zone3 = 0, zone4 = 0;
             double zonecenter = 0;
+            double zonefull = InformationForm.GetZonePercentage(DetectedZone.All);
 
 
             zonecenter = InformationForm.GetZonePercentage(DetectedZone.Center);
@@ -322,52 +357,204 @@ namespace KukaForm
             // определение значений каждой зоны
 
             //
-            if (zonecenter == 0)
+
+            myReqPos.Speed.Z = 0;
+
+            if (zonefull > 0.0001f)
             {
-                textBox1.Text += Environment.NewLine + "Try to alighn to line...";
-                Align();
+                if (zonecenter == 0)
+                {
+                    textBox1.Text += Environment.NewLine + "Try to alighn to line...";
+                    //SetRequareMoving(WhichControlToUse.Hover);
+                    //myReqPos.Pitch = 0;
+                    //myReqPos.Roll = 0;
+                    //Align();
+                    Control();
 
-                #region Forget and delete
-                //if ((zone1 > 0)||(zone2 > 0))
-                //{
-                //    #region Zone 1 and 2
-                //    if (zone1 > 0)
-                //    {
-                //        //летим вперед
-                //    }
-                //    else
-                //    {
-                //        //летим назад
-                //    }
-                //    #endregion
-                //}
-                //else if((zone3 > 0) || (zone4 > 0))
-                //{
-                //    #region Zone 3 and 4
-                //    if (zone3 > 0)
-                //    {
-                //        //летим вправо
-                //    }
-                //    else
-                //    {
-                //        //летим влево
-                //    }
-                //    #endregion
-                //}
-                //else
-                //{
-                //    //ищим линию
-                //}
+                    #region Forget and delete
+                    //if ((zone1 > 0)||(zone2 > 0))
+                    //{
+                    //    #region Zone 1 and 2
+                    //    if (zone1 > 0)
+                    //    {
+                    //        //летим вперед
+                    //    }
+                    //    else
+                    //    {
+                    //        //летим назад
+                    //    }
+                    //    #endregion
+                    //}
+                    //else if((zone3 > 0) || (zone4 > 0))
+                    //{
+                    //    #region Zone 3 and 4
+                    //    if (zone3 > 0)
+                    //    {
+                    //        //летим вправо
+                    //    }
+                    //    else
+                    //    {
+                    //        //летим влево
+                    //    }
+                    //    #endregion
+                    //}
+                    //else
+                    //{
+                    //    //ищим линию
+                    //}
 
-                #endregion
+                    #endregion
 
+                }
+                else
+                {
+                    textBox1.Text += Environment.NewLine + "Try to Follow  line...";
+                    //SetRequareMoving(WhichControlToUse.Hover);
+                    //myReqPos.Pitch = 0;
+                    //myReqPos.Roll = 0;
+                    Control();
+                    // Moving();
+                    //выбираем другой алгоритм движения
+                    //FollowingLineCondition = FollowingLine.MovementOnLine;
+                }
             }
             else
             {
-                textBox1.Text += Environment.NewLine + "Try to Follow  line...";
-                //Moving();
-                //выбираем другой алгоритм движения
-                //FollowingLineCondition = FollowingLine.MovementOnLine;
+                SetRequareMoving(WhichControlToUse.Hover);
+                myReqPos.Pitch = 0;
+                myReqPos.Roll = 0;
+                textBox1.Text += Environment.NewLine + "Can't find  line...";
+                //MoveToLineZone();
+            }
+        }
+
+        void Control()
+        {
+            var zoneTopLeft = InformationForm.GetZonePercentage(DetectedZone.TopLeft);
+            var zoneTopRight = InformationForm.GetZonePercentage(DetectedZone.TopRight);
+
+            var zoneLeft = InformationForm.GetZonePercentage(DetectedZone.Left);
+            var zoneRight = InformationForm.GetZonePercentage(DetectedZone.Right);
+            var zoneBottomLeft = InformationForm.GetZonePercentage(DetectedZone.BottomLeft);
+            var zoneBottomRight = InformationForm.GetZonePercentage(DetectedZone.BottomRight);
+            var zoneBottom = InformationForm.GetZonePercentage(DetectedZone.Bottom);
+
+            var zoneCenter = InformationForm.GetZonePercentage(DetectedZone.Center);
+
+            var zoneTop = InformationForm.GetZonePercentage(DetectedZone.Top);
+
+            float yaw = 0;
+            float roll = 0;
+            float pitch = 0;
+
+
+            float tolerance = 0.01f;
+
+           
+            if(zoneCenter < tolerance)
+            {
+                if ((zoneTopLeft > tolerance) || (zoneLeft > tolerance) || (zoneBottomLeft > tolerance))
+                {
+                    
+                    roll += -0.001f;
+                }
+                if ((zoneTopRight > tolerance) || (zoneRight > tolerance) || (zoneBottomRight > tolerance))
+                {
+                    
+                    roll += 0.001f;
+                }
+
+                if ((zoneTopLeft > tolerance) || (zoneTop > tolerance) || (zoneTopRight > tolerance))
+                {
+                   
+                    pitch += 0.001f;
+                }
+                if ((zoneBottomLeft > tolerance) || (zoneBottom> tolerance) || (zoneBottomRight> tolerance))
+                {
+                    
+                    pitch += -0.001f;
+                }
+            }
+            else
+            {
+                if(zoneTop > tolerance)
+                {
+                    pitch = 0.0005f;
+                }
+
+                if ((zoneTopLeft > tolerance)&& (zoneTop < tolerance))
+                {
+                    yaw = -0.1f;
+                }
+                else if((zoneTopRight > tolerance) && (zoneTop < tolerance))
+                {
+                    yaw = 0.1f;
+                }
+
+                if((zoneLeft > tolerance) && (zoneTop < tolerance))
+                {
+                    yaw = -0.1f;
+                }
+                else if ((zoneRight > tolerance)&& (zoneTop < tolerance))
+                {
+                    yaw = 0.1f;
+                }
+            }
+
+
+            
+            SetRequareMoving(WhichControlToUse.PitchRoll);
+            myReqPos.Speed.Z = yaw;
+            myReqPos.Roll = roll;
+            myReqPos.Pitch = pitch;
+
+            textBox1.Text += Environment.NewLine + "Control yaw... " + yaw.ToString() ;
+            textBox1.Text += Environment.NewLine + "Control roll... " + roll.ToString();
+            textBox1.Text += Environment.NewLine + "Control pitch... " + pitch.ToString();
+
+            textBox1.Text += Environment.NewLine + zoneTopLeft.ToString() + " " + zoneTop.ToString() + " " + zoneTopRight.ToString();
+            textBox1.Text += Environment.NewLine + zoneLeft.ToString() + " " + zoneCenter.ToString() + " " + zoneRight.ToString();
+            textBox1.Text += Environment.NewLine + zoneBottomLeft.ToString() + " " + zoneBottom.ToString() + " " + zoneBottomRight.ToString();
+        }
+        #region close
+        void MoveToLineZone()
+        {
+            float x, y;
+            x = mySensorData.Coordinates.X;
+            y = mySensorData.Coordinates.Y;
+
+
+            float xs = 0, ys = 0, xe = 0, ye = 0;
+            if(((xs < x) && (ys < y)) && ((xe  > x)&&(ye > y)))
+            {
+
+                float _x = (xe + xs) / 2;
+                float _y = (ye + ys) / 2;
+                if(x < xs)
+                {
+
+                }
+                if(y < ys)
+                {
+
+                }
+
+                if(x > xe)
+                {
+
+                }
+                if(y > ye)
+                {
+
+                }
+
+                float yaw = 0, pitch = 0, roll = 0;
+
+                //yaw = 
+            }
+            else
+            {
+
             }
         }
 
@@ -405,17 +592,18 @@ namespace KukaForm
             if(zone3 > threshhold)
             {
                 textBox1.Text += Environment.NewLine + "Third rule works...";
-                roll += -droll;
-                pitch += dpitch;
+                roll -= droll;
+                pitch -= dpitch;
             }
             if(zone4 > threshhold)
             {
                 textBox1.Text += Environment.NewLine + "Fouth rule works...";
-                roll += droll;
+                roll -= droll;
                 pitch += dpitch;
             }
 
-
+            textBox1.Text += Environment.NewLine + "Roll..." + roll.ToString();
+            textBox1.Text += Environment.NewLine + "Pitch..." + pitch.ToString();
             SetUpRequre(roll, pitch);
             //задать воздействие
         }
@@ -467,6 +655,8 @@ namespace KukaForm
             {
                 roll += droll;
             }
+
+            SetUpRequre(roll, pitch, yaw);
         }
 
         void SetUpRequre(float roll, float pitch, float yaw)
@@ -521,13 +711,13 @@ namespace KukaForm
         {
 
         }
-
+        #endregion
         #endregion
 
         void AlgorythmGetYaw()
         {
             textBox1.Text = "Getting Yaw: " + myReqPos.Yaw;
-            myReqPos.Yaw = mySets[CurrentSets].yaw;
+            myReqPos.Yaw = CurrentSet.yaw;
 
             SetRequareMoving(WhichControlToUse.YawControl);
 
@@ -552,6 +742,99 @@ namespace KukaForm
                 textBox1.Text = "Off";
             }
         }
+
+        void AlgorithmForReachCoordinates()
+        {
+            SetPointCoordinates set = (SetPointCoordinates)CurrentSet;
+
+            if(!isNear(set.Coordinates[0], mySensorData.Coordinates, 0.5f))
+            {
+                set.Coordinates.RemoveAt(0);
+            }
+
+            if(set.Coordinates.Count != 0)
+            {
+                var pos = set.Coordinates[0];
+                var dangle = GetAngle(mySensorData.Coordinates, set.Coordinates[0], mySensorData.Yaw);
+                var lenght = Sqrt(mySensorData.Coordinates, set.Coordinates[0]);
+
+                float vang = 0;
+                float pitch = 0;
+
+
+                if (Math.Abs(dangle) > 0.01f)
+                {
+                    if(dangle > 0)
+                    {
+                        vang = 0.5f;
+                    }
+                    else
+                    {
+                        vang = -0.5f;
+                    }
+                    
+                }
+                else
+                {
+                    pitch = -0.01f;
+                }
+
+                textBox1.Text = "Fly to Coordinate " + set.Coordinates[0].X.ToString() + " " + set.Coordinates[0].Y.ToString();
+                SetRequareMoving(WhichControlToUse.CoordinateControl);
+                myReqPos.Speed.Z = vang;
+                myReqPos.Roll = 0;
+                myReqPos.Pitch = pitch;
+            }
+        }
+
+        bool isNear(Points3 p1, Points3 p2, float n)
+        {
+            var r = Sqrt(p1, p2);
+
+
+
+            return (r < n); 
+        }
+
+        float Sqrt(Points3 p1, Points3 p2)
+        {
+            return (float)Math.Sqrt(Math.Pow(p1.X - p2.X, 2) + Math.Pow(p1.Y - p2.Y, 2));
+        }
+
+        float GetAngle(Points3 copter, Points3 target, float anglecopter)
+        {
+           var dangle = 0f;
+           var lenght = (float)Math.Sqrt(Math.Pow((double)(target.X - copter.X), 2) + Math.Pow((double)(target.Y - copter.Y), 2));
+            if (target.X - copter.X != 0)
+            {
+                
+                var angle = (float)Math.Atan((double)((target.Y - copter.Y) / (target.X - copter.X)));
+                if ((target.X - copter.X) < 0)
+                    if ((target.Y - copter.Y) > 0)
+                        angle = angle + (float)Math.PI;
+                    else if ((target.Y - copter.Y) < 0)
+                        angle = -angle + (float)Math.PI;
+                
+                var nAngle = anglecopter;
+               
+
+                dangle = angle - nAngle;
+                if (dangle > (float)Math.PI)
+                    dangle = -2 * (float)Math.PI + dangle;
+                if (dangle < -(float)Math.PI)
+                    dangle = 2 * (float)Math.PI + dangle;
+
+                ;
+            }
+            else
+            {
+                dangle = (float)Math.PI / 2;
+            }
+            return dangle;
+        }
+
+
+
 
         #endregion
 
@@ -641,6 +924,16 @@ namespace KukaForm
 
 
         #region база условий смены состояния
+
+        void ConditionCoordinates()
+        {
+            SetPointCoordinates set = (SetPointCoordinates)CurrentSet;
+            if (set.Coordinates.Count != 0)
+            {
+                ChangeSets();
+            }
+        }
+
         void ConditionHeight()
         {
             if ((Math.Abs((mySensorData.Height - myReqPos.Height)) < 0.05f) && (Math.Abs(mySensorData.Speed.Z) < 0.05f))
@@ -720,6 +1013,20 @@ namespace KukaForm
 
             InitializeSets();
         }
+
+        private void button3_Click(object sender, EventArgs e)
+        {
+            if(button3.Text == "Старт")
+            {
+                copter.getVrepController().StartSimulation();
+                button3.Text = "Стоп";
+            }
+            else
+            {
+                copter.getVrepController().StopSimulation();
+                button3.Text = "Старт";
+            }
+        }
     }
 
 
@@ -728,5 +1035,11 @@ namespace KukaForm
         public WhichProcess currentProcces;
         public float height;
         public float yaw;
+    }
+
+    public class SetPointCoordinates: Setpoint
+    {
+        public List<Points3> Coordinates;
+
     }
 }

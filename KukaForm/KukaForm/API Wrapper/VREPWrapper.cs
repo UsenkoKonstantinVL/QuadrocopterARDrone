@@ -274,6 +274,25 @@ namespace remoteApiNETWrapper
             simxGetVisionSensorImage(clientID, obj, ref resolution, ref imageIntPtr, option, (int)simx_opmode.streaming);
             return imageIntPtr;
         }
+
+
+        [DllImport(@"C:\Program Files (x86)\V-REP3\V-REP_PRO_EDU\programming\remoteApiBindings\lib\lib\32Bit\remoteApi.dll", CallingConvention = CallingConvention.Cdecl)]
+        public static extern simx_error simxStartSimulation(int clientID,  int operationMode);
+        public static void simwStartSimulation(int clientID)
+        {
+        
+            simxStartSimulation(clientID,  (int)simx_opmode.oneshot);
+         
+        }
+
+        [DllImport(@"C:\Program Files (x86)\V-REP3\V-REP_PRO_EDU\programming\remoteApiBindings\lib\lib\32Bit\remoteApi.dll", CallingConvention = CallingConvention.Cdecl)]
+        public static extern simx_error simxStopSimulation(int clientID, int operationMode);
+        public static void simwStopSimulation(int clientID)
+        {
+           
+            simxStopSimulation(clientID, (int)simx_opmode.oneshot);
+           
+        }
     }
 
     public class VelocityArrayData

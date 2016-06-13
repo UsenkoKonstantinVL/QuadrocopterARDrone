@@ -6,15 +6,19 @@ using System.Threading.Tasks;
 
 namespace Controller
 {
-    class PID
+    public class PID
     {
-        float P;
-        float I;
-        float D;
+        public float P;
+        public float I;
+        public float D;
 
         float Derr;
         float Integr;
-        //float 
+
+        public PID()
+        {
+            P = I = D = 0;
+        }
 
         public PID(float _P, float _I, float _D)
         {
@@ -41,6 +45,57 @@ namespace Controller
 
             return Pv + Ival + Dval;
 
+        }
+    }
+
+    public class FuzzyPID:PID
+    {
+        public float[] fP;
+        public float[] fI;
+        public float[] fD;
+        public float[] Condition;
+
+        public FuzzyPID()
+        {
+            fP = new float[3];
+            fI = new float[3];
+            fD = new float[3];
+            Condition = new float[2];
+        }
+
+        public FuzzyPID(float[] _P, float[] _I, float[] _D, float[] _C)
+        {
+            fP = _P;
+            fI = _I;
+            fD = _D;
+            Condition = _C;
+        }
+
+        public float GetEffect(float error)
+        {
+            int i = 0;
+            if(Math.Abs(error) < Condition[0])
+            {
+                i = 0;
+            }
+            else if(Math.Abs(error) < Condition[1] && Math.Abs(error) > Condition[0])
+            {
+                i = 1;
+            }
+            else
+            {
+                i = 2;
+            }
+
+            setPIDCoefficient(fP[i], fI[i], fD[i]);
+            return getEffect(error);
+        }
+
+        void setPIDCoefficient(float _p, float _i, float _d)
+        {
+            P = _p;
+            I = _i;
+            D = _d;
         }
     }
 }

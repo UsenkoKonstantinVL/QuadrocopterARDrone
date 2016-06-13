@@ -98,7 +98,7 @@ namespace Controller
                 alpha = -alpha;
             }
 
-            Points3 speed = new Points3(vm*(float)(Math.Cos(-orient[2]) * orient[0] - Math.Sin(-orient[2]) * orient[1]), vm * (float)(Math.Sin(-orient[2]) * orient[0] + Math.Cos(-orient[2]) * orient[1]), vz);
+            Points3 speed = new Points3((float)(Math.Cos(-orient[2]) * vx - Math.Sin(-orient[2]) * vy), (float)(Math.Sin(-orient[2]) * vx + Math.Cos(-orient[2]) * vy), vz);
 
             var pos = vrep.getObjectPosition(CopterDummy);
             Points3 poss = new Points3(pos[0], pos[1], pos[2]);

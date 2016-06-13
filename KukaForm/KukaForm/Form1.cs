@@ -32,7 +32,15 @@ namespace KukaForm
         PID pidZ;
         PID pidVX;
         PID pidVY;
+        PID pidDx;
+        PID pidControlVX;
+        PID pidDy;
         PID pidVYaw;
+
+        FuzzyPID fpidPitch;
+        FuzzyPID fpidRoll;
+
+        FuzzyPID fpidVx;
 
         float dvx = 0;
         float dvy = 0;
@@ -85,16 +93,24 @@ namespace KukaForm
             //pidVX = new PID(0.01f, 0.0000f, 0.1f);//(0.0005f, 0.0f, 0.01f);
             //pidVY = new PID(0.01f, 0.0000f, 0.1f);
 
-            pidAltitude = new PID(1f, 0.0f, 12f);
+            pidAltitude = new PID(0.3f, 0.0f, 13f);
             pidYaw = new PID(0.2f, 0.00f, 5f);
-            pidRoll = new PID(0.2f, 0.005f, 5f);
-            pidPitch = new PID(0.2f, 0.005f, 5f);
-            pidX = new PID(0.05f, 0.000f, 0.5f);
-            pidY = new PID(0.05f, 0.000f, 0.5f);
-            pidZ = new PID(0.05f, 0.000f, 10f);
-            pidVX = new PID(0.08f, 0.00000f, 0.5f);//(0.0005f, 0.0f, 0.01f);
-            pidVY = new PID(0.08f, 0.00000f, 0.5f);
+            pidRoll = new PID(0.5f, 0.00001f, 10f);
+            pidPitch = new PID(0.8f, 0.00001f, 12f);
+            pidX = new PID(0.0005f, 0.000f, 0.008f);
+            pidY = new PID(0.0005f, 0.000f, 0.008f);
+            pidZ = new PID(0.03f, 0.000f, 10f);
+            pidVX = new PID(0.008f, 0.0001f, 0.08f);//(0.0005f, 0.0f, 0.01f);
+            pidVY = new PID(0.008f, 0.0001f, 0.08f);
             pidVYaw = new PID(0.004f, 0.0f, 0.08f);
+
+            pidDx = new PID(0.001f, 0.000001f, 0.01f);
+            pidControlVX = new PID(0.05f, 0.000f, 1f);
+            pidDy = new PID(0.008f, 0, 0.05f);
+
+            fpidPitch = new FuzzyPID(new float[]{ 1.55f, 0.8f, 0.5f}, new float[] { 0.00000f, 0.00000f, 0.00000f }, new float[] { 12f, 10f, 8f }, new float[] { 0.1f,  1 });
+            fpidRoll = new FuzzyPID(new float[] { 1.55f, 0.8f, 0.5f }, new float[] { 0.00000f, 0.00000f, 0.00000f }, new float[] { 12f, 10f, 8f }, new float[] { 0.1f, 1 });
+            fpidVx = new FuzzyPID(new float[] { 0.0001f, 0.0002f, 0.002f }, new float[] { 0.00000f, 0.00000f, 0.00000f }, new float[] { 0.001f, 0.001f, 0.001f }, new float[] { 0.05f, 0.5f });
         }
 
         private void buttonStart_Click(object sender, EventArgs e)
@@ -184,7 +200,7 @@ namespace KukaForm
             //dvely = 0f;
             // При нажатии на кнопку надо обнулять dvх и dvy
 
-            if((Math.Abs(dz) > 0.01f))
+            if ((Math.Abs(dz) > 0.01f))
             {
                 
                 if (dz > 0)
@@ -207,10 +223,62 @@ namespace KukaForm
             var yaw = pidYaw.getEffect(dyaw);
             var vel = pidAltitude.getEffect(rvel - _vel);
             var roll = pidRoll.getEffect(/*_dy*/ dvely  - _roll);
-            var pitch = pidPitch.getEffect(/*_dx*/ dvelx - _pitch);
+            var pitch = fpidPitch.GetEffect(dvelx - _pitch);//pidPitch.getEffect(/*_dx*/ dvelx - _pitch);
             moveDriver(commonVelocity + vel/*-dz*/, yaw, pitch, roll);
 
-            textBox1.Text = _vel.ToString();
+            textBox1.Text = "Position control...";
+            textBox1.Text += Environment.NewLine + _vel.ToString();
+        }
+
+        public void CoordinateControl()
+        {
+            
+            var dz = mySensorData.Speed.Z;
+
+            var _yaw = mySensorData.Yaw;
+            var _vel = mySensorData.Height;
+            var _roll = mySensorData.Roll;
+            var _pitch = mySensorData.Pitch;
+
+            var ryaw = myReqPos.Yaw;
+            var rvel = myReqPos.Height;
+            var rroll = myReqPos.Roll;
+            var rpitch = myReqPos.Pitch;
+
+            var rx = myReqPos.Position.X;
+            var ry = myReqPos.Position.Y;
+
+           
+            
+
+            if ((Math.Abs(dz) > 0.01f))
+            {
+
+                if (dz > 0)
+                {
+                    dz = pidZ.getEffect(0.01f - dz);
+                }
+                else if (dz < 0)
+                {
+                    dz = pidZ.getEffect(-0.01f + dz);
+                }
+            }
+            else
+                dz = 0;
+
+            var dyaw = ryaw - _yaw;
+            if (dyaw > Math.PI)
+                dyaw = -2 * (float)Math.PI + dyaw;
+            else if (dyaw < -Math.PI)
+                dyaw = 2 * (float)Math.PI + dyaw;
+            var yaw = pidYaw.getEffect(dyaw);
+            var vel = pidAltitude.getEffect(rvel - _vel);
+            var roll = pidRoll.getEffect( rroll - _roll);
+            var pitch = fpidPitch.GetEffect(rpitch - _pitch);
+            moveDriver(commonVelocity + vel, yaw, pitch, roll);
+
+            textBox1.Text = "Position control...";
+            textBox1.Text += Environment.NewLine + _vel.ToString();
         }
 
         void SpeedControl()
@@ -301,8 +369,8 @@ namespace KukaForm
 
         void PositionHover()
         {
-            dvx += mySensorData.Speed.X;
-            dvy += mySensorData.Speed.Y;
+            dvx = mySensorData.Speed.X;
+            dvy = mySensorData.Speed.Y;
             dvz += mySensorData.Speed.Z;
             var dangz = mySensorData.AngularSpeed.Z;
 
@@ -332,36 +400,41 @@ namespace KukaForm
              {
                  dvely = znak(dvely) * 1f;
              }*/
-            var dvelx = pidX.getEffect(-dvx);
-            if (Math.Abs(dvelx) > 0.5236f)
-            {
-                dvelx = znak(dvelx) * 0.5236f;
-            }
+            var dvelx = pidVX.getEffect(-dvx);
+            //if (Math.Abs(dvelx) > 0.5236f)
+            //{
+            //    dvelx = znak(dvelx) * 0.5236f;
+            //}
 
-            var dvely = pidY.getEffect(dvy - 0);
-            if (Math.Abs(dvely) > 0.5236f)
-            {
-                dvely = znak(dvely) * 0.5236f;
-            }
+            var dvely = pidVY.getEffect(dvy - 0);
+            //if (Math.Abs(dvely) > 0.5236f)
+            //{
+            //    dvely = znak(dvely) * 0.5236f;
+            //}
 
             var dyaw = ryaw - _yaw;
-            if (dyaw > Math.PI)
-                dyaw = -2 * (float)Math.PI + dyaw;
-            else if (dyaw < -Math.PI)
-                dyaw = 2 * (float)Math.PI + dyaw;
+            //if (dyaw > Math.PI)
+            //    dyaw = -2 * (float)Math.PI + dyaw;
+            //else if (dyaw < -Math.PI)
+            //    dyaw = 2 * (float)Math.PI + dyaw;
 
 
             //var yaw = pidYaw.getEffect(dyaw);
-            var yaw = pidYaw.getEffect(-dangz);
+            var yaw = pidYaw.getEffect(dyaw);
             var vel = pidAltitude.getEffect(rvel - _vel);//pidAltitude.getEffect(rvel - _vel);
             /*var roll = pidRoll.getEffect(/*dvely*- _roll);
             var pitch = pidPitch.getEffect(/*dvelx  - _pitch);
             moveDriver(commonVelocity + vel, yaw, pitch - dvelx, roll - dvely);*/
             var roll = pidRoll.getEffect(/*_dy*/ dvely - _roll);
             var pitch = pidPitch.getEffect(/*_dx*/ dvelx - _pitch);
-            moveDriver(commonVelocity + vel/*-dz*/, yaw, pitch, roll);
 
-            textBox1.Text = _vel.ToString();
+
+            textBox1.Text = "Position hover...";
+            textBox1.Text += Environment.NewLine + _vel.ToString();
+            moveDriver(commonVelocity + vel, yaw, pitch, roll);
+
+            
+
         }
 
 
@@ -371,33 +444,42 @@ namespace KukaForm
             dvy = mySensorData.Speed.Y;
             dvz += mySensorData.Speed.Z;
             var dangz = mySensorData.AngularSpeed.Z;
+            var dangpitch = mySensorData.AngularSpeed.Y;
+            var dangroll = mySensorData.AngularSpeed.X;
 
             var _yaw = mySensorData.Yaw;
             var _vel = mySensorData.Height;
             var _roll = mySensorData.Roll;
             var _pitch = mySensorData.Pitch;
 
+            
+
             var ryaw = myReqPos.Yaw;
             var rvel = myReqPos.Height;
             var rroll = myReqPos.Roll;
             var rpitch = myReqPos.Pitch;
 
+            var dryaw = myReqPos.Speed.Z;
+
             var rx = myReqPos.Position.X;
             var ry = myReqPos.Position.Y;
 
+            Console.WriteLine(rvel.ToString() + " " + rroll.ToString() + " " + rpitch.ToString());
 
 
-            var dvelx = pidVX.getEffect(0 - dvx);
-            if (Math.Abs(dvelx) > 1f)
+            float dvelx = 0;
+            if (rroll == 0)
             {
-                dvelx = znak(dvelx) * 1f;
+                dvelx = pidDx.getEffect(0 - dvx);
             }
 
-            var dvely = pidVY.getEffect(dvy - 0);
-            if (Math.Abs(dvely) > 1f)
-            {
-                dvely = znak(dvely) * 1f;
+            //var dvelx = pidDx.getEffect(rpitch - dvx);
+
+            float dvely = 0; 
+            if (rroll == 0) {
+                dvely = pidDy.getEffect(-dvy );
             }
+           
 
             var dyaw = ryaw - _yaw;
             if (dyaw > Math.PI)
@@ -406,14 +488,37 @@ namespace KukaForm
                 dyaw = 2 * (float)Math.PI + dyaw;
 
 
-            var yaw = pidYaw.getEffect(dyaw);
+            float velx = 0;
+            if (Math.Abs(dvx) > 0.05f)
+            {
+                if (dvx > 0.05f)
+                {
+                    velx = pidControlVX.getEffect(0.05f - dvx);
+                }
+                else
+                {
+                    velx = pidControlVX.getEffect(-0.05f - dvx);
+                }
+            }
+
+            var yaw = pidYaw.getEffect(-dangz - dryaw);
             //var yaw = pidYaw.getEffect(-dangz);
             var vel = pidAltitude.getEffect(rvel - _vel);//pidAltitude.getEffect(rvel - _vel);
-            var roll = pidRoll.getEffect(/*dvely*/ -_roll);
-            var pitch = pidPitch.getEffect(/*dvelx*/  -_pitch);
-            moveDriver(commonVelocity + vel, yaw, pitch /*+ dvelx*/, roll /*+ dvely*/);
+            var roll = fpidRoll.GetEffect(rroll - _roll);//pidRoll.getEffect(/*-dvely +*/ rroll - _roll);
+            float pitch = 0;
+            //if (rpitch != 0)
 
-            textBox1.Text = _vel.ToString();
+                pitch = fpidVx.GetEffect(/*velx +*/ 0 - dvx);// pidPitch.getEffect(velx + rpitch - _pitch);
+            //else
+               // pitch = pidDx.getEffect(velx - dvx);//pidDx.getEffect(velx - dvx);
+
+
+            Console.WriteLine(vel.ToString() + " " + roll.ToString() + " " + pitch.ToString());
+           
+
+            textBox1.Text = "PitchRoll...";
+            textBox1.Text += Environment.NewLine + dvx.ToString() + " " + velx.ToString();
+            moveDriver(commonVelocity + vel, yaw, pitch, roll);
         }
 
         void fall()
@@ -534,8 +639,14 @@ namespace KukaForm
             copter.setVelocityToForceDriver(1, vel + yaw + pitch + roll);
             copter.setVelocityToForceDriver(2, vel - yaw + pitch - roll);
             copter.setVelocityToForceDriver(3, vel + yaw - pitch - roll);
+
+
+            textBox1.Text += Environment.NewLine + (vel - yaw - pitch + roll).ToString() + " " + (vel + yaw + pitch + roll).ToString();
+            textBox1.Text += Environment.NewLine + (vel - yaw + pitch - roll).ToString() + " " + (vel + yaw - pitch - roll).ToString();
         }
         #endregion
+
+        WhichControlToUse prevcontrl = WhichControlToUse.Nothing;
 
         private void timer1_Tick(object sender, EventArgs e)
         {
@@ -551,10 +662,18 @@ namespace KukaForm
                 case WhichControlToUse.Off: SetOffCopter(); break;
                 case WhichControlToUse.Fall: fall(); break;
                 case WhichControlToUse.PitchRoll: PitchRoll(); break;
+                case WhichControlToUse.CoordinateControl: CoordinateControl(); break;
 
             }
-           
 
+            if (prevcontrl != wctu)
+                ControlToChange();
+            prevcontrl = wctu;
+        }
+
+        void ControlToChange()
+        {
+            dvx = dvy = dvz = 0;
         }
 
         void UpdateSensorData()
