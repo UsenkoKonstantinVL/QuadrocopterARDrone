@@ -105,34 +105,17 @@ namespace KukaForm
         {
             Setpoint sp = new Setpoint();
             sp.currentProcces = WhichProcess.Height;
-            sp.height = 0.9f;
+            sp.height = 0.4f;
             mySets.Add(sp);
 
             sp = new Setpoint();
             sp.currentProcces = WhichProcess.Hover;
             mySets.Add(sp);
 
-            SetPointCoordinates p = new SetPointCoordinates();
-            p.currentProcces = WhichProcess.Coordinates;
-            Points3 p1, p2;
-            p1 = new Points3();
-            p2 = new Points3();
 
-            p1.X = 1f;
-            p1.Y = 2f;
-
-            p2.X = 2f;
-            p2.Y = 2f;
-
-            p.Coordinates = new List<Points3>();
-
-            p.Coordinates.Add(p1);
-            p.Coordinates.Add(p2);
-            mySets.Add(p);
-
-            //sp = new Setpoint();
-            //sp.currentProcces = WhichProcess.PitchRoll;
-            //mySets.Add(sp);
+            sp = new Setpoint();
+            sp.currentProcces = WhichProcess.PitchRoll;
+            mySets.Add(sp);
 
             /*sp = new Setpoint();
             sp.currentProcces = WhichProcess.Yaw;
@@ -177,13 +160,17 @@ namespace KukaForm
                 CurrentSet = mySets[CurrentSets];
                 PrepareToMoving();
             }
-            else
+            else if (CurrentSets == (mySets.Count))
             {
                 CurrentSet = new Setpoint();
                 CurrentSet.currentProcces = WhichProcess.Hover;
+
+            }
+            else
+            {
                 CurrentSets--;
             }
-               
+
         }
 
         void PrepareToMoving()
@@ -456,23 +443,23 @@ namespace KukaForm
                 if ((zoneTopLeft > tolerance) || (zoneLeft > tolerance) || (zoneBottomLeft > tolerance))
                 {
                     
-                    roll += -0.001f;
+                    roll += -0.004f;
                 }
                 if ((zoneTopRight > tolerance) || (zoneRight > tolerance) || (zoneBottomRight > tolerance))
                 {
                     
-                    roll += 0.001f;
+                    roll += 0.004f;
                 }
 
                 if ((zoneTopLeft > tolerance) || (zoneTop > tolerance) || (zoneTopRight > tolerance))
                 {
                    
-                    pitch += 0.001f;
+                    pitch += 0.004f;
                 }
                 if ((zoneBottomLeft > tolerance) || (zoneBottom> tolerance) || (zoneBottomRight> tolerance))
                 {
                     
-                    pitch += -0.001f;
+                    pitch += -0.004f;
                 }
             }
             else
@@ -830,6 +817,8 @@ namespace KukaForm
             {
                 dangle = (float)Math.PI / 2;
             }
+            
+
             return dangle;
         }
 
@@ -928,7 +917,7 @@ namespace KukaForm
         void ConditionCoordinates()
         {
             SetPointCoordinates set = (SetPointCoordinates)CurrentSet;
-            if (set.Coordinates.Count != 0)
+            if (set.Coordinates.Count == 0)
             {
                 ChangeSets();
             }
